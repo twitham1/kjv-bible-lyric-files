@@ -1,0 +1,23 @@
+#!/usr/bin/perl -w
+
+$url = 'http://www.mp3bible.org/kjv/audio';
+$cache = '/home/twitham/kjv/audio';
+mkdir $cache or die $! unless -d $cache;
+
+open FILE, my $abbr = '/usr/share/sword/locales.d/abbr.conf' or die $!;
+while (<FILE>) {
+    $abbr{$1} = $2 if /^(.+)=(\d+)/;
+}
+close FILE;
+
+my($book, $chapter) = ($ARGV[0] =~ /(.+) Chapter (.+)/);
+my $num = $abbr{uc($book)} || die "can't find $book in $abbr";
+$book =~ s/^(I+) /length($1)/e;
+$book = substr $book, 0, 3;
+my $dir = sprintf "%02d_%s", $num, $book;
+mkdir "$cache/$dir" or die $! unless -d "$cache/$dir";
+my $file = sprintf "$dir/%02d%s%03d.mp3", $num, $book, $chapter;
+unless (-s "$cache/$file") {
+    system qw/wget -nv -O/, "$cache/$file", "$url/$file";
+}
+system qw/mplayer -quiet/, "$cache/$file";
