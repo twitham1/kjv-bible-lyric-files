@@ -1,0 +1,141 @@
+#!/usr/bin/perl -w
+
+# to get a copy for kjv-mode say: kjv gen 1-2000 > kjv.txt 
+
+use Text::Wrap;
+
+%name = ();
+if (open FILE, "/usr/share/sword/locales.d/abbr.conf") {
+    while (<FILE>) {
+	$name{$2} = $1 if /^(.+)=(\S+)/;
+    }
+    close FILE;
+}
+
+$debug = 1, shift @ARGV if @ARGV and $ARGV[0] =~ /^-d/;
+if (@ARGV) {			# one lookup and exit
+    &lookup(@ARGV);
+} else {			# interactive KJV shell!
+    print "KJV> ";
+    while (<>) {
+	chomp;
+	last if /quit/i;
+	next unless $_;
+	&lookup(split);
+    } continue {
+	print "KJV> ";
+    }
+}
+
+BEGIN {
+#     my $x = chr 128;
+#     my $y = chr 255;
+#     my $high = "[$x-$y]";	# regex to match 8-bit characters
+
+    sub lookup {
+	my($type, @query) = @_;
+#open PIPE, "diatheke -l abbr -f CGI -b Scofield -k @ARGV |"
+	my $search = '';
+	if ('phrase' =~ /^$type/) {
+	    $search = ' -s phrase';
+	} elsif ('multiword' =~ /^$type/) {
+	    $search = ' -s multiword';
+	} elsif ('regex' =~ /^$type/) {
+	    $search = ' -s regex';
+	} else {
+	    unshift @query, $type;
+	}
+	print "-*- mode: kjv -*-\n";
+	my $cmd = "diatheke -l abbr -f CGI -o h -b KJV$search -k '@query'";
+	warn "$cmd\n";
+	open PIPE, "$cmd |" or die "can't pipe from diatheke: $!\n";
+	while (<PIPE>) {
+	    print if $debug;
+	    chomp;
+#	    s!<p>!\n!g;
+	    s!<br />!!g;
+	    s!<i>\s*!\[!g;	# italics
+	    s!\s*</i>!\]!g;
+	    s!<b>!\{!g;		# bold headers
+	    s!</b>!\}!g;
+	    s!\\pa!!g;		# Exe 26:16
+#	    $_ .= "--\n" if s/<p>//g; # paragraph
+	    print "\n*\t{ The Book of $name{$1} }\n" if /^(\S+) 1:1:/;
+	    print "\n**\t\t{ $name{$1} Chapter $2 }\n\n" if /^(\S+) (\d+):1:/;
+#	    s/\(KJV\)//;
+	    s!<p>!\n!g;
+#	    s/\s+$//;
+#	    print;
+	    print wrap("", "\t", $_), "\n";
+	}
+	close PIPE;
+    }
+}
+
+__END__
+# 	    s/$high/sprintf "\\%o", ord $&/eg;
+# 	    s/\\342\\200\\231/\'/g; # e.g. john 3:29 bridegroom's
+
+use Sword;
+
+$mgr = new Sword::SWMgr() or die;
+print join "\n", keys %$mgr;
+$mod = $mgr->module($ARGV[0]) or die "bogus module?\n";	# KJV, KJVD, Pilgrim...
+print join "\n", $mod->Name, $mod->Type, $mod->Encoding, $mod->Markup,
+    $mod->getConfig, '';
+$mod->top;
+print join "\n", @foo = $mod->getEntryAttributes, $mod->isWritable, '';
+#exit;
+#print "Disp: ", $mod->Disp, "\n"; # undefined
+do {
+#      $key = $mod->CreateKey;
+#      $vkey = new Sword::VerseKey($key);
+#  #    $vkey = $key->VerseKey;
+#      $key->Persist;
+#      if ($vkey) {
+#  	$vkey->Headings(1);
+#  	$vkey->AutoNormalize(0);
+#      }
+#      $mod->SetKey($key);
+#      print "key: ", $mod->Key, "\n";
+#  #    $mod->Search("John");
+#  #      $buf = $mod->getRawEntry;
+#  #      print "$key\n$buf\n\n";
+    print "\n", $mod->KeyText, " ";
+#    print $mod->text;
+#    print $mod->RenderText;	# undefined
+#    print $mod->StripText;
+    for (0..5) {
+	$mod->Markup($_);		# this don't work?
+	$mod->Display;
+	print "\n";
+    }
+    last;
+} while ($mod->next);
+#} while ($i++ < 3);
+
+__END__
+
+while (<>) {
+    $b = $1 and $chapter = 1 and $book++
+	if /^((\d+\s+)?(\S+|Song of Solomon))$/;
+    $chapter = $2 if /^(Chapter|Psalm) (\d+)/;
+    if (/^(\d+)(.+)/) {
+	print "$book/$b/$chapter/$1\n" unless $done{"$book/$b"}++;
+    }
+}
+__END__
+    next unless my($book) = /^(\d*\D+)\d+/;
+    print "$book\n" unless $done{$book}++;
+
+
+; cool stuff for emacs:
+(setq font-lock-keywords
+      '(("{\\([^}]+\\)"
+	 (1 font-lock-comment-face append))
+	("\\([^{]+\\)}"
+	 (1 font-lock-comment-face append))
+	("\\[\\([^\]]+\\)"
+	 (1 'italic prepend))
+	("\\([^\[]+\\)\\]"
+	 (1 'italic prepend))))
