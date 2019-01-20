@@ -178,7 +178,7 @@ Turning on KJV mode runs the normal hook `kjv-mode-hook'."
 (defun kjv-date (&optional time)
   "Move point just past the given time's position and show what day it is."
   (or time (setq time (float-time)))
-  (let* ((ltime (midnight-time-float time))
+  (let* ((ltime (seconds-to-time time))
 	 (list (decode-time ltime))
 	 (day (nth 3 list))
 	 (mon (nth 4 list))
@@ -213,7 +213,7 @@ Turning on KJV mode runs the normal hook `kjv-mode-hook'."
 	(set-buffer orig)
 	(kjv-date time)
 	(set-buffer schedule)
-	(insert (format-time-string "\n%10B %d  " (midnight-time-float time)))
+	(insert (format-time-string "\n%10B %d  " (seconds-to-time time)))
 	(set-buffer orig)
 	(append-to-buffer schedule (point-at-bol) (point-at-eol))
 	(setq time (+ time 86400)))
