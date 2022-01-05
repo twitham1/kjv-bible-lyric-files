@@ -4,10 +4,16 @@
 
 use Text::Wrap;
 
+# for diatheke:
+$ENV{LD_LIBRARY_PATH} = "/usr/local/lib";
+$ENV{PATH} = "/usr/local/bin:$ENV{PATH}";
+
 %name = ();
+%abbr = ();
 if (open FILE, "/usr/share/sword/locales.d/abbr.conf") {
     while (<FILE>) {
 	$name{$2} = $1 if /^(.+)=(\S+)/;
+	$abbr{$1} = $2 if /^(.+)=(\S+)/;
     }
     close FILE;
 }
@@ -32,6 +38,8 @@ BEGIN {
 #     my $y = chr 255;
 #     my $high = "[$x-$y]";	# regex to match 8-bit characters
 
+    my $last = my $title = '';
+    my %done;
     sub lookup {
 	my($type, @query) = @_;
 #open PIPE, "diatheke -l abbr -f CGI -b Scofield -k @ARGV |"
@@ -46,26 +54,58 @@ BEGIN {
 	    unshift @query, $type;
 	}
 	print "-*- mode: kjv -*-\n";
-	my $cmd = "diatheke -l abbr -f CGI -o h -b KJV$search -k '@query'";
+#	my $cmd = "diatheke -l abbr -f CGI -o h -b KJV$search -k '@query'";
+	my $cmd = "diatheke -l abbr -f internal -b KJV$search -k '@query'";
 	warn "$cmd\n";
 	open PIPE, "$cmd |" or die "can't pipe from diatheke: $!\n";
 	while (<PIPE>) {
 	    print if $debug;
 	    chomp;
-#	    s!<p>!\n!g;
-	    s!<br />!!g;
-	    s!<i>\s*!\[!g;	# italics
-	    s!\s*</i>!\]!g;
-	    s!<b>!\{!g;		# bold headers
-	    s!</b>!\}!g;
-	    s!\\pa!!g;		# Exe 26:16
-#	    $_ .= "--\n" if s/<p>//g; # paragraph
-	    print "\n*\t{ The Book of $name{$1} }\n" if /^(\S+) 1:1:/;
-	    print "\n**\t\t{ $name{$1} Chapter $2 }\n\n" if /^(\S+) (\d+):1:/;
-#	    s/\(KJV\)//;
-	    s!<p>!\n!g;
-#	    s/\s+$//;
-#	    print;
+
+# #	    s!<p>!\n!g;
+# 	    s!\266!\n!;		# paragraph
+# 	    s!<br />!!g;
+# 	    s!<span.*?>!!;	# font styles
+# 	    s!</span>!!;
+# 	    s!<i>\s*!\[!g;	# italics
+# 	    s!\s*</i>!\]!g;
+# 	    s!<b>!\{!g;		# bold headers
+# 	    s!</b>!\}!g;
+# 	    s!\\pa!!g;		# Exe 26:16
+
+	    s!<html>.*<body>!!;
+	    s!</body>.*</html>!!;
+
+	    s!</?w.*?>!!g;
+	    s!</?q.*?>!"!g;
+	    s!<transChange.*?>![!g;
+	    s!</transChange>!]!g;
+	    s!<milestone.*?"x-p"/>!\n!g;
+	    s!<divineName>(\S+)</divineName>!\U$1!g;
+	    s!<chapter.*?>!!g;
+	    s!</?foreign.*?>!!g;
+	    s!</?inscription>!!g;
+	    s!<div .*"book"/>!!;
+	    s!\s+$!!;
+
+	    $title = 0;
+	    $title = $1 if s!\s*<title.*?>(.+)</title>!!;
+
+	    if (/^\s*(.+) 1:1:/) {
+		my $name = $name{$1} || $1;
+		print "\n*\t{ The Book of $name }\n";
+	    }
+	    if (/^\s*(.+) (\d+):1:/) {
+		my $name = $name{$1} || $1;
+		print "\n**\t\t{ $name Chapter $2 }\n\n";
+		$chapter = "$1 $2";
+	    }
+	    if ($title and !$done{"$chapter $title"}++) {
+		print wrap("\n\t", "\t", $title), "\n\n";
+	    }
+
+	    s/^\s*(.+)( \d+:\d+:\s+)/$abbr{$1}$2/;
+
 	    print wrap("", "\t", $_), "\n";
 	}
 	close PIPE;
