@@ -1,5 +1,92 @@
 #!/usr/bin/perl -w
 
+# KVJ audio player for emacs kjv-mode, by twitham@sbcglobal.net
+
+# can also now generate .lrc lyric files for mythmusic!
+
+# Downloaded from https://www.audiotreasure.com/indexKJV.htm in 2020:
+my $cache = '/var/lib/mythtv/music/iTunes/iTunes Media/Podcasts/KJV';
+
+chdir $cache or die $!;
+
+opendir DIR, '.' or die $!;
+my @mp3 = sort grep /^\d+_/, readdir DIR;
+closedir DIR;
+
+if (@ARGV and $ARGV[0] =~ /(.+) Chapter (.+)/) { # original purpose: audio player
+
+    &play($1, $2);
+
+} elsif (grep /lyric/, @ARGV) { # generate lyric files for mythmusic!
+
+    my @line;
+    open FILE, '-|', qw(zcat /home/twitham/kjv.txt.gz) or die $!;
+    while (<FILE>) {
+	if (/\{ (.+) Chapter (\d+) \}/) {
+	    &lyric(\@line);
+	    @line = ();
+	}
+	push @line, $_;
+    }
+    &lyric(\@line);
+}
+
+sub file {
+    my($book, $chapter) = @_;
+    $book =~ s/ /_/g;
+    $book =~ s/^III_/3/ or $book =~ s/^II_/2/ or  $book =~ s/^I_/1/;
+    $book =~ s/_of_John//;
+    my $chap = sprintf "%s%03d", $book, $chapter;
+    my $file = (grep /$chap.mp3/, @mp3)[0] || (grep /$book.mp3/, @mp3)[0] || 0;
+    return $file;
+}
+
+sub play {
+    my $file = file(@_);
+    $file or return;
+    system qw/mplayer -quiet/, $file;
+}
+
+sub len {
+    my $len = 0;
+    for my $line (@_) {
+	$line =~ /^(\S+ \d+:\d+:)?\s*(.*)/;
+	$len += (length $2) || 1; # the 1 lets paragraphs work
+    }
+    return $len;
+}
+
+# See https://en.wikipedia.org/wiki/LRC_(file_format)
+sub lyric {
+    my($lineref) = @_;
+    my $head = $lineref->[0];
+    $head =~ /\{ (.+) Chapter (\d+) \}/ or return;
+    my($book, $chap) = ($1, $2);
+    my $file = file($book, $chap);
+    $file or warn "no file in @_\n" and return;
+    my $duration = `exiftool -duration $file`;
+    my($h, $m, $s) = ($duration =~ /: (\d+):(\d+):(\d+)/);
+    defined $s or warn "unknown seconds in $file\n" and return;
+    $duration = $h * 3600 + $m * 60 + $s;
+    my $len = len(@$lineref);
+    $per = $duration / $len;	# seconds per byte of text
+    my $t = 0;
+    (my $out = $file) =~ s/.mp3/.lrc/;
+    open OUT, '>', $out or die $!;
+    for my $line (@$lineref) {
+	my $min = int($t / 60);
+	my $sec = $t - $min * 60;
+	my $this = sprintf "[%02d:%05.02f]$line", $min, $sec;
+	print OUT $this;
+	$t += len($line) * $per;
+    }
+    printf "%4d seconds in %4d lines in $out\t(%.5f)\n",
+	$t, scalar @$lineref, $per;
+}
+
+__END__
+This worked in 2005 but the source site disappeared
+
 $url = 'http://www.mp3bible.org/kjv/audio';
 $cache = '/home/twitham/kjv/audio';
 mkdir $cache or die $! unless -d $cache;
