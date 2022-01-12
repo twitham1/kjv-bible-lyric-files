@@ -47,11 +47,13 @@ sub play {
     system qw/mplayer -quiet/, $file;
 }
 
-sub len {
+sub len {			# return the length of the text
     my $len = 0;
     for my $line (@_) {
-	$line =~ /^(\S+ \d+:\d+:)?\s*(.*)/;
-	$len += (length $2) || 1; # the 1 lets paragraphs work
+	$line =~ /^(\S+ \d+:\d+:)?\s*(.*)/; # ignore chapter/verse leader
+	# the 1 gives paragraphs an empty line at a unique time
+#	$len += (length $2) || 1; # timing by characters
+	$len += (split /\s+/, $2) || 1;	# timing by words
     }
     return $len;
 }
@@ -65,11 +67,12 @@ sub lyric {
     my $file = file($book, $chap);
     $file or warn "no file in @_\n" and return;
     my $duration = `exiftool -duration $file`;
-    my($h, $m, $s) = ($duration =~ /: (\d+):(\d+):(\d+)/);
+    my($h, $m, $s) = ($duration =~ /: (\d+):(\d+):(\d+)/ ||
+		      $duration =~ /: ()()(\d+\.\d+) s/);
     defined $s or warn "unknown seconds in $file\n" and return;
-    $duration = $h * 3600 + $m * 60 + $s;
+    $duration = ($h || 0) * 3600 + ($m || 0) * 60 + $s;
     my $len = len(@$lineref);
-    $per = $duration / $len;	# seconds per byte of text
+    $per = $duration / $len;	# seconds per word of text
     my $t = 0;
     (my $out = $file) =~ s/.mp3/.lrc/;
     open OUT, '>', $out or die $!;
