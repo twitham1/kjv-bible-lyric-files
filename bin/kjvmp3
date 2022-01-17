@@ -51,9 +51,10 @@ sub len {			# return the length of the text
     my $len = 0;
     for my $line (@_) {
 	$line =~ /^(\S+ \d+:\d+:)?\s*(.*)/; # ignore chapter/verse leader
-	# the 1 gives paragraphs an empty line at a unique time
-#	$len += (length $2) || 1; # timing by characters
-	$len += (split /\s+/, $2) || 1;	# timing by words
+	(my $text = $2) =~ s/([?;:,.])/  $1  /g; # punctuation takes time
+	# the 1 gives paragraphs an empty line at a unique time:
+	$len += (split /\s+/, $text) || 1; # timing by words
+#	$len += (length $text) || 1; # timing by characters
     }
     return $len;
 }
@@ -67,8 +68,10 @@ sub lyric {
     my $file = file($book, $chap);
     $file or warn "no file in @_\n" and return;
     my $duration = `exiftool -duration $file`;
-    my($h, $m, $s) = ($duration =~ /: (\d+):(\d+):(\d+)/ ||
-		      $duration =~ /: ()()(\d+\.\d+) s/);
+    # my($h, $m, $s) = ($duration =~ /: (\d+):(\d+):(\d+)/ ||
+    # 		      $duration =~ /: ()()(\d+\.\d+) s/);
+    my($h, $m, $s) = ($duration =~ /: (\d+):(\d+):(\d+)/);
+    defined $s or ($h, $m, $s) = ($duration =~ /: ()()(\d+\.\d+) s/);
     defined $s or warn "unknown seconds in $file\n" and return;
     $duration = ($h || 0) * 3600 + ($m || 0) * 60 + $s;
     my $len = len(@$lineref);
@@ -86,28 +89,3 @@ sub lyric {
     printf "%4d seconds in %4d lines in $out\t(%.5f)\n",
 	$t, scalar @$lineref, $per;
 }
-
-__END__
-This worked in 2005 but the source site disappeared
-
-$url = 'http://www.mp3bible.org/kjv/audio';
-$cache = '/home/twitham/kjv/audio';
-mkdir $cache or die $! unless -d $cache;
-
-open FILE, my $abbr = '/usr/share/sword/locales.d/abbr.conf' or die $!;
-while (<FILE>) {
-    $abbr{$1} = $2 if /^(.+)=(\d+)/;
-}
-close FILE;
-
-my($book, $chapter) = ($ARGV[0] =~ /(.+) Chapter (.+)/);
-my $num = $abbr{uc($book)} || die "can't find $book in $abbr";
-$book =~ s/^(I+) /length($1)/e;
-$book = substr $book, 0, 3;
-my $dir = sprintf "%02d_%s", $num, $book;
-mkdir "$cache/$dir" or die $! unless -d "$cache/$dir";
-my $file = sprintf "$dir/%02d%s%03d.mp3", $num, $book, $chapter;
-unless (-s "$cache/$file") {
-    system qw/wget -nv -O/, "$cache/$file", "$url/$file";
-}
-system qw/mplayer -quiet/, "$cache/$file";
