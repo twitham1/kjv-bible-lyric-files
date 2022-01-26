@@ -12,6 +12,21 @@ my $kjv = 'zcat /home/twitham/kjv.txt.gz |';
 
 use warnings;
 use strict;
+use Getopt::Long;
+use Lingua::EN::Syllable;
+
+my %opt = (mp3 => $cache, kjv => $kjv); # defaults
+
+GetOptions(\%opt, qw(mp3|m=s lyric|l kjv|t=s verbose|v word|w read|r n|dry))
+    or die "usage: $0 [options] '<book> Chapter <num>'
+-m | --mp3	location of mp3 files ($opt{mp3})
+-l |--lyric	generate .lrc lyric files instead, from:
+-t | --kjv	location of KJV text ($opt{kjv}), for -l
+-v | --verbose	show syllables per line, with -l
+-w | --word	show syllables per word, useful with -l -v
+-n | --dry	put output in tmp.lrc instead, useful with -l -v -w
+-r | --read	generate daily reading statistics instead
+";
 
 chdir $cache or die $!;
 
@@ -23,7 +38,7 @@ if (@ARGV and $ARGV[0] =~ /(.+) Chapter (.+)/) { # original purpose: audio playe
 
     &play($1, $2);
 
-} elsif (grep /lyric/, @ARGV) { # generate lyric files for mythmusic!
+} elsif ($opt{lyric}) {		# generate lyric files for mythmusic!
 
     my @line;
     open FILE, $kjv or die "$kjv: $!";
@@ -35,8 +50,11 @@ if (@ARGV and $ARGV[0] =~ /(.+) Chapter (.+)/) { # original purpose: audio playe
 	push @line, $_;
     }
     &lyric(\@line);
-} elsif (grep /read/, @ARGV) {	# generate reading statistics
+
+} elsif ($opt{read}) {		# generate reading statistics
+
     &readstats;
+
 }
 
 sub file {			# book/chapter -> .mp3 filename
@@ -55,14 +73,29 @@ sub play {
     system qw/mplayer -quiet/, $file;
 }
 
+# This measures the text for distributing the correct portion of time
+# of the audio to each line.  Initialy I measured bytes, then improved
+# to words, and finally to syllables.
+
 sub len {			# return the length of the text
     my $len = 0;
     for my $line (@_) {
 	$line =~ /^(\S+ \d+:\d+:)?\s*(.*)/; # ignore chapter/verse leader
-	(my $text = $2) =~ s/([?;:,.])/  $1  /g; # punctuation takes time
-	# the 1 gives paragraphs an empty line at a unique time:
-	$len += (split /\s+/, $text) || 1; # timing by words
-#	$len += (length $text) || 1; # timing by characters
+
+	(my $text = $2) =~ s/([;:,])/ pause /g; # punctuation pauses
+	$text =~ s/([?.])/ stop stop /g;	# sentence pauses
+
+	$text =~ s/\W+/ /g; # strip italics and quotes and break hyphens
+
+	$text =~ s/^\s*$/ a /;	# blank lines need a unique timestamp
+ 
+	for my $word (split /\s+/, $text) {
+	    $word =~ /^\w+$/ or next;
+	    my $one = syllable $word;
+	    print " $word=$one" if $opt{word};
+	    $len += $one;
+	}
+	print "\n" if $opt{word};
     }
     return $len;
 }
@@ -84,13 +117,16 @@ sub lyric {
     my $per = $duration / $len;	# seconds per word of text
     my $t = 0;
     (my $out = $file) =~ s/.mp3/.lrc/;
+    $out = 'tmp.lrc' if $opt{n};
     open OUT, '>', $out or die $!;
     for my $line (@$lineref) {
 	my $min = int($t / 60);
 	my $sec = $t - $min * 60;
 	my $this = sprintf "[%02d:%05.02f]$line", $min, $sec;
 	print OUT $this;
-	$t += len($line) * $per;
+	my $len = len($line);
+	print "$len\t$this" if $opt{verbose};
+	$t += $len * $per;
     }
     printf "%4d seconds in %4d lines in $out\t(%.5f)\n",
 	$t, scalar @$lineref, $per;
@@ -110,7 +146,7 @@ sub readstats {			# report of daily reading statistics
     my $line = my $LINE = 0;
     $last = '';
     my $date;
-    open FILE, 'lrc.log' or die $!;
+    open FILE, 'lrc.log' or die $!; # output from -l
     while (<FILE>) {
 	chomp;
 	if (/(\S+).lrc/) {
