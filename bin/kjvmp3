@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 # KVJ audio player for emacs kjv-mode, by twitham@sbcglobal.net
 
@@ -6,6 +6,12 @@
 
 # Downloaded from https://www.audiotreasure.com/indexKJV.htm in 2022:
 my $cache = '/var/lib/mythtv/music/iTunes/iTunes Media/Podcasts/KJV';
+
+# converted from Sword by ~twitham/bin/kjv gen 1-2000 > kjv.txt in 2022:
+my $kjv = 'zcat /home/twitham/kjv.txt.gz |';
+
+use warnings;
+use strict;
 
 chdir $cache or die $!;
 
@@ -20,7 +26,7 @@ if (@ARGV and $ARGV[0] =~ /(.+) Chapter (.+)/) { # original purpose: audio playe
 } elsif (grep /lyric/, @ARGV) { # generate lyric files for mythmusic!
 
     my @line;
-    open FILE, '-|', qw(zcat /home/twitham/kjv.txt.gz) or die $!;
+    open FILE, $kjv or die "$kjv: $!";
     while (<FILE>) {
 	next if / mode: kjv /;	# skip header
 	if (/\{ (The Book of .+|.+ Chapter \d+) \}/) {
@@ -33,12 +39,6 @@ if (@ARGV and $ARGV[0] =~ /(.+) Chapter (.+)/) { # original purpose: audio playe
     &readstats;
 }
 
-sub play {
-    my $file = file(@_);
-    $file or return;
-    system qw/mplayer -quiet/, $file;
-}
-
 sub file {			# book/chapter -> .mp3 filename
     my($book, $chapter) = @_;
     $book =~ s/ /_/g;
@@ -47,6 +47,12 @@ sub file {			# book/chapter -> .mp3 filename
     my $chap = sprintf "%s%03d", $book, $chapter;
     my $file = (grep /$chap.mp3/, @mp3)[0] || (grep /$book.mp3/, @mp3)[0] || 0;
     return $file;
+}
+
+sub play {
+    my $file = file(@_);
+    $file or return;
+    system qw/mplayer -quiet/, $file;
 }
 
 sub len {			# return the length of the text
@@ -75,7 +81,7 @@ sub lyric {
     defined $s or warn "unknown seconds in $file\n" and return;
     $duration = ($h || 0) * 3600 + ($m || 0) * 60 + $s;
     my $len = len(@$lineref);
-    $per = $duration / $len;	# seconds per word of text
+    my $per = $duration / $len;	# seconds per word of text
     my $t = 0;
     (my $out = $file) =~ s/.mp3/.lrc/;
     open OUT, '>', $out or die $!;
@@ -92,6 +98,7 @@ sub lyric {
 }
 
 sub readstats {			# report of daily reading statistics
+    my %date;
     my $last = file(qw/Genesis 1/);
     while (<DATA>) {
 	/\s*(\w+ \d+).*\{ (.+) Chapter (\d+) \}/ or next;
@@ -102,6 +109,7 @@ sub readstats {			# report of daily reading statistics
     my $sec = my $SEC = 0;
     my $line = my $LINE = 0;
     $last = '';
+    my $date;
     open FILE, 'lrc.log' or die $!;
     while (<FILE>) {
 	chomp;
@@ -126,6 +134,7 @@ sub readstats {			# report of daily reading statistics
     print "seconds\tlines\tsec/ln\tMonth day\tThrough Chapter\n";
     print "$hr hours of audio in $LINE lines\n";
 }
+# from kjv-schedule of kjv-mode in emacs, by twitham
 __END__
    January 01  **		{ Genesis Chapter 4 }
    January 02  **		{ Genesis Chapter 8 }
