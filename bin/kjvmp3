@@ -17,13 +17,13 @@ use Lingua::EN::Syllable;
 
 my %opt = (mp3 => $cache, kjv => $kjv); # defaults
 
-GetOptions(\%opt, qw(mp3|m=s lyric|l kjv|t=s verbose|v syllables|s read|r n|dry))
+GetOptions(\%opt, qw(mp3|m=s lyric|l kjv|t=s verbose|v words|w read|r n|dry))
     or die "usage: $0 [options] '<book> Chapter <num>'
 -m | --mp3	location of mp3 files ($opt{mp3})
 -l |--lyric	generate .lrc lyric files instead, from:
 -t | --kjv	location of KJV text ($opt{kjv}), for -l
 -v | --verbose	show syllables per line with -l
--s | --syllables	show syllables per word with -l, useful with -v
+-w | --words	show syllables per word with -l
 -n | --dry	don't write .lrc with -l, useful with -v -s
 -r | --read	generate daily reading statistics instead
 ";
@@ -36,16 +36,7 @@ closedir DIR;
 
 if ($opt{lyric}) {		# generate lyric files for mythmusic!
 
-    my @line;
-    open FILE, $kjv or die "$kjv: $!";
-    while (<FILE>) {
-	next if / mode: kjv /;	# skip header
-	if (/\{ (The Book of .+|.+ Chapter \d+) \}/) {
-	    &lyric(\@line) and @line = ();
-	}
-	push @line, $_;
-    }
-    &lyric(\@line);
+    &lyrics;
 
 } elsif ($opt{read}) {		# generate reading statistics
 
@@ -92,12 +83,26 @@ sub len {			# return the length of the text
 	for my $word (split /\s+/, $text) {
 	    $word =~ /^\w+$/ or next;
 	    my $one = syllable $word;
-	    print " $word=$one" if $opt{syllables};
+	    print " $word=$one" if $opt{words};
 	    $len += $one;
 	}
-	print "\n" if $opt{syllables};
+	print "\n" if $opt{words};
     }
     return $len;
+}
+
+sub lyrics {
+    my @line;
+    open FILE, $kjv or die "$kjv: $!";
+    while (<FILE>) {
+	next if / mode: kjv /;	# skip header
+	s/\(KJV\)//;		# skip footer
+	if (/\{ (The Book of .+|.+ Chapter \d+) \}/) {
+	    &lyric(\@line) and @line = ();
+	}
+	push @line, $_;
+    }
+    &lyric(\@line);
 }
 
 # See https://en.wikipedia.org/wiki/LRC_(file_format)
