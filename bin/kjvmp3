@@ -17,7 +17,8 @@ use Lingua::EN::Syllable;
 
 my %opt = (mp3 => $cache, kjv => $kjv); # defaults
 
-GetOptions(\%opt, qw(mp3|m=s lyric|l kjv|t=s verbose|v words|w read|r n|dry))
+GetOptions(\%opt, qw(mp3|m=s lyric|l kjv|t=s verbose|v words|w n|dry
+read|r day|d))
     or die "usage: $0 [options] '<book> Chapter <num>'
 -m | --mp3	location of mp3 files ($opt{mp3})
 -l |--lyric	generate .lrc lyric files instead, from:
@@ -26,9 +27,12 @@ GetOptions(\%opt, qw(mp3|m=s lyric|l kjv|t=s verbose|v words|w read|r n|dry))
 -w | --words	show syllables per word with -l
 -n | --dry	don't write .lrc with -l, useful with -v -s
 -r | --read	generate daily reading statistics instead
+-d | --day	append day column to text instead
 ";
 
 chdir $cache or die $!;
+
+binmode STDOUT, ":encoding(UTF-8)";
 
 opendir DIR, '.' or die $!;
 my @mp3 = sort grep /^\d+_/, readdir DIR;
@@ -38,7 +42,7 @@ if ($opt{lyric}) {		# generate lyric files for mythmusic!
 
     &lyrics;
 
-} elsif ($opt{read}) {		# generate reading statistics
+} elsif ($opt{read} || $opt{day}) { # generate reading statistics or daily reading
 
     &readstats;
 
@@ -134,34 +138,37 @@ sub lyric {
 	$t += $len * $per;
     }
     printf "%4d seconds in %4d lines in $out\t(%.5f)\n",
-	$t, scalar @$lineref, $per;
+	$duration, scalar @$lineref, $per;
     return 1;
 }
 
 sub readstats {			# report of daily reading statistics
     my %date;
+    my @date;
     my $last = file(qw/Genesis 1/);
     while (<DATA>) {
 	/\s*(\w+ \d+).*\{ (.+) Chapter (\d+) \}/ or next;
 	my $file = file($2, $3);
 	$date{$last} = $1;
+	push @date, $&;
 	$last = $file;
     }
     my $sec = my $SEC = 0;
     my $line = my $LINE = 0;
     $last = '';
-    my $date;
+    my $date; my %sec;
     open FILE, 'lrc.log' or die $!; # output from -l
     while (<FILE>) {
 	chomp;
 	if (/(\S+).lrc/) {
 	    my $file = "$1.mp3";
 	    if ($date{$file}) {
-		print $last;
+		print $last if $opt{read};
 		$date = $date{$file};
 		$sec = $line = 0;
 	    }
-	    /(\d+) seconds/ and $sec += $1 and $SEC += $1;
+	    /(\d+) seconds .* (\w+.lrc)/ and $sec += $1 and $SEC += $1
+		and $sec{$2} = $1;
 	    /(\d+) lines/ and $line += $1 and $LINE += $1;
 	    my $per = $sec / $line;
 	    s/.* in //; s/\.lrc.*//;
@@ -170,10 +177,43 @@ sub readstats {			# report of daily reading statistics
 	    #	    print "$_\t$last\n";
 	}
     }
-    print $last;
-    my $hr = $SEC / 3600;
-    print "seconds\tlines\tsec/ln\tMonth day\tThrough Chapter\n";
-    print "$hr hours of audio in $LINE lines\n";
+    if ($opt{read}) {
+	print $last;
+	my $hr = $SEC / 3600;
+	print "seconds\tlines\tsec/ln\tMonth day\tThrough Chapter\n";
+	print "$hr hours of audio in $LINE lines\n";
+	return;
+    }
+
+    my $day = $SEC / 365;
+    my $t = my $this = 0;
+    $last = 0;
+    for my $lrc (<*.lrc>) {
+	open FILE, '<:encoding(UTF-8)', $lrc or die $!;
+	while (<FILE>) {
+	    chomp;
+	    /(\d{2}):(\d{2}.\d{2})/
+		and $this = $1 * 60 + $2;
+	    my $now = $t + $this;
+	    $now /= $day;
+	    print;
+	    s/^(\S+\])$/$1\t\t/ and print "\t\t";
+	    s/.*\t//;
+	    my $n = 64 - length($_);
+	    my $s = " " x ($n % 8);
+	    $s .= "\t" x ($n / 8);
+	    if (int($now) != $last) {
+		(my $d = shift @date) =~ s/\s+/ /g;
+		$d =~ s/^ //;
+		print $s, $d;
+		$last = int $now;
+	    } else {
+	    	printf "$s%7.3f", $now;
+	    }
+	    print "\n";
+	}
+	$t += $sec{$lrc} || 0;
+    }
 }
 # from kjv-schedule of kjv-mode in emacs, by twitham
 __END__
