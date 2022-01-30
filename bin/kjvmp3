@@ -14,20 +14,21 @@ use warnings;
 use strict;
 use Getopt::Long;
 use Lingua::EN::Syllable;
+use Time::Local;
+use POSIX qw(strftime);
 
 my %opt = (mp3 => $cache, kjv => $kjv); # defaults
 
 GetOptions(\%opt, qw(mp3|m=s lyric|l kjv|t=s verbose|v words|w n|dry
-read|r day|d))
+read|r=i))
     or die "usage: $0 [options] '<book> Chapter <num>'
 -m | --mp3	location of mp3 files ($opt{mp3})
 -l |--lyric	generate .lrc lyric files instead, from:
 -t | --kjv	location of KJV text ($opt{kjv}), for -l
--v | --verbose	show syllables per line with -l
+-v | --verbose	show syllables per line with -l, reading stats with -r
 -w | --words	show syllables per word with -l
 -n | --dry	don't write .lrc with -l, useful with -v -s
--r | --read	generate daily reading statistics instead
--d | --day	append day column to text instead
+-r | --read = N	generate daily reading schedule for N days
 ";
 
 chdir $cache or die $!;
@@ -42,9 +43,9 @@ if ($opt{lyric}) {		# generate lyric files for mythmusic!
 
     &lyrics;
 
-} elsif ($opt{read} || $opt{day}) { # generate reading statistics or daily reading
+} elsif ($opt{read}) {	  # generate time-based daily reading schedule
 
-    &readstats;
+    &readplan;
 
 } elsif (@ARGV and $ARGV[0] =~ /(.+) Chapter (\d+)/) { # original purpose: audio player
 
@@ -142,443 +143,57 @@ sub lyric {
     return 1;
 }
 
-sub readstats {			# report of daily reading statistics
-    my %date;
-    my @date;
-    my $last = file(qw/Genesis 1/);
-    while (<DATA>) {
-	/\s*(\w+ \d+).*\{ (.+) Chapter (\d+) \}/ or next;
-	my $file = file($2, $3);
-	$date{$last} = $1;
-	push @date, $&;
-	$last = $file;
-    }
-    my $sec = my $SEC = 0;
-    my $line = my $LINE = 0;
-    $last = '';
-    my $date; my %sec;
-    open FILE, 'lrc.log' or die $!; # output from -l
+sub readplan {			# generate reading schedule
+    my $sec = 0;
+    my %sec;
+    open FILE, 'lrc.log' or die $!; # output from -l, required
     while (<FILE>) {
-	chomp;
-	if (/(\S+).lrc/) {
-	    my $file = "$1.mp3";
-	    if ($date{$file}) {
-		print $last if $opt{read};
-		$date = $date{$file};
-		$sec = $line = 0;
-	    }
-	    /(\d+) seconds .* (\w+.lrc)/ and $sec += $1 and $SEC += $1
-		and $sec{$2} = $1;
-	    /(\d+) lines/ and $line += $1 and $LINE += $1;
-	    my $per = $sec / $line;
-	    s/.* in //; s/\.lrc.*//;
-	    $last = sprintf "%d\t%d\t%.2f\t%s\t$_\n",
-		$sec, $line, $per, $date;
-	    #	    print "$_\t$last\n";
-	}
+	/(\d+) seconds .* (\w+.lrc)/ and $sec += $1
+	    and $sec{$2} = $1;
     }
-    if ($opt{read}) {
-	print $last;
-	my $hr = $SEC / 3600;
-	print "seconds\tlines\tsec/ln\tMonth day\tThrough Chapter\n";
-	print "$hr hours of audio in $LINE lines\n";
-	return;
-    }
-
-    my $day = $SEC / 365;
-    my $t = my $this = 0;
-    $last = 0;
+    my %time;
+    my $time = my $this = my $last = 0;
     for my $lrc (<*.lrc>) {
 	open FILE, '<:encoding(UTF-8)', $lrc or die $!;
 	while (<FILE>) {
 	    chomp;
 	    /(\d{2}):(\d{2}.\d{2})/
 		and $this = $1 * 60 + $2;
-	    my $now = $t + $this;
-	    $now /= $day;
-	    print;
-	    s/^(\S+\])$/$1\t\t/ and print "\t\t";
-	    s/.*\t//;
-	    my $n = 64 - length($_);
-	    my $s = " " x ($n % 8);
-	    $s .= "\t" x ($n / 8);
-	    if (int($now) != $last) {
-		(my $d = shift @date) =~ s/\s+/ /g;
-		$d =~ s/^ //;
-		print $s, $d;
-		$last = int $now;
-	    } else {
-	    	printf "$s%7.3f", $now;
-	    }
-	    print "\n";
+	    /(\{ .+ Chapter \d+ \})/ and $time{$1} = $time + $this;
 	}
-	$t += $sec{$lrc} || 0;
+	$time += $sec{$lrc} || 0;
     }
+    $time{'{ The End }'} = $time;
+    $time = $last = 0;
+    my $date = timelocal(0, 0, 12, 1, 0, 3); # 1973 - 1975 no leap years
+    my $days = $opt{read} > 30 ? $opt{read} : 365;
+    my $one = $sec / $days;
+    my $i = my $delta = my $max = 0;
+    my $min = 999999;
+    for (my $time = $one; $time <= $sec; $time += $one) {
+
+	my $goal = $last + $one; # daily reading goal, but:
+	$goal -= 0.3 * $delta;	 # move toward staying on-time
+	my $chap = (sort { abs($time{$a} - $goal) <=>
+			       abs($time{$b} - $goal) } keys %time)[0];
+	my $this = $time{$chap};
+	$delta = $this - $time;	# offset from perfect time
+	my $len = $this - $last; # today's reading time
+	$max = $len if $len > $max;
+	$min = $len if $len < $min;
+
+	$i++;
+	my $ts = strftime "%10B %e", localtime $date;
+	if ($opt{verbose}) {
+	    printf "%d\t%3d/%3d\t%s\t%d\t%s\n", $len, $i, $days,
+		$ts, $delta, $chap;
+	} else {
+	    printf "%s\t%s\n", $ts, $chap;
+	}
+	$last = $this;
+	$date += 24 * 60 * 60;
+    }
+    printf "(goal=%.0f seconds n/$days, d=delta %d-%d=%d)\n",
+	$one, $min, $max, $max - $min
+	if $opt{verbose};
 }
-# from kjv-schedule of kjv-mode in emacs, by twitham
-__END__
-   January 01  **		{ Genesis Chapter 4 }
-   January 02  **		{ Genesis Chapter 8 }
-   January 03  **		{ Genesis Chapter 12 }
-   January 04  **		{ Genesis Chapter 16 }
-   January 05  **		{ Genesis Chapter 19 }
-   January 06  **		{ Genesis Chapter 22 }
-   January 07  **		{ Genesis Chapter 25 }
-   January 08  **		{ Genesis Chapter 27 }
-   January 09  **		{ Genesis Chapter 29 }
-   January 10  **		{ Genesis Chapter 31 }
-   January 11  **		{ Genesis Chapter 34 }
-   January 12  **		{ Genesis Chapter 37 }
-   January 13  **		{ Genesis Chapter 40 }
-   January 14  **		{ Genesis Chapter 42 }
-   January 15  **		{ Genesis Chapter 44 }
-   January 16  **		{ Genesis Chapter 47 }
-   January 17  **		{ Genesis Chapter 50 }
-   January 18  **		{ Exodus Chapter 3 }
-   January 19  **		{ Exodus Chapter 6 }
-   January 20  **		{ Exodus Chapter 9 }
-   January 21  **		{ Exodus Chapter 12 }
-   January 22  **		{ Exodus Chapter 14 }
-   January 23  **		{ Exodus Chapter 17 }
-   January 24  **		{ Exodus Chapter 20 }
-   January 25  **		{ Exodus Chapter 23 }
-   January 26  **		{ Exodus Chapter 26 }
-   January 27  **		{ Exodus Chapter 29 }
-   January 28  **		{ Exodus Chapter 30 }
-   January 29  **		{ Exodus Chapter 33 }
-   January 30  **		{ Exodus Chapter 36 }
-   January 31  **		{ Exodus Chapter 38 }
-  February 01  **		{ Leviticus Chapter 1 }
-  February 02  **		{ Leviticus Chapter 4 }
-  February 03  **		{ Leviticus Chapter 7 }
-  February 04  **		{ Leviticus Chapter 9 }
-  February 05  **		{ Leviticus Chapter 12 }
-  February 06  **		{ Leviticus Chapter 14 }
-  February 07  **		{ Leviticus Chapter 16 }
-  February 08  **		{ Leviticus Chapter 18 }
-  February 09  **		{ Leviticus Chapter 21 }
-  February 10  **		{ Leviticus Chapter 24 }
-  February 11  **		{ Leviticus Chapter 26 }
-  February 12  **		{ Numbers Chapter 1 }
-  February 13  **		{ Numbers Chapter 2 }
-  February 14  **		{ Numbers Chapter 4 }
-  February 15  **		{ Numbers Chapter 6 }
-  February 16  **		{ Numbers Chapter 8 }
-  February 17  **		{ Numbers Chapter 10 }
-  February 18  **		{ Numbers Chapter 13 }
-  February 19  **		{ Numbers Chapter 15 }
-  February 20  **		{ Numbers Chapter 18 }
-  February 21  **		{ Numbers Chapter 20 }
-  February 22  **		{ Numbers Chapter 23 }
-  February 23  **		{ Numbers Chapter 26 }
-  February 24  **		{ Numbers Chapter 28 }
-  February 25  **		{ Numbers Chapter 31 }
-  February 26  **		{ Numbers Chapter 33 }
-  February 27  **		{ Numbers Chapter 35 }
-  February 28  **		{ Deuteronomy Chapter 2 }
-     March 01  **		{ Deuteronomy Chapter 4 }
-     March 02  **		{ Deuteronomy Chapter 6 }
-     March 03  **		{ Deuteronomy Chapter 9 }
-     March 04  **		{ Deuteronomy Chapter 12 }
-     March 05  **		{ Deuteronomy Chapter 14 }
-     March 06  **		{ Deuteronomy Chapter 17 }
-     March 07  **		{ Deuteronomy Chapter 21 }
-     March 08  **		{ Deuteronomy Chapter 24 }
-     March 09  **		{ Deuteronomy Chapter 27 }
-     March 10  **		{ Deuteronomy Chapter 29 }
-     March 11  **		{ Deuteronomy Chapter 31 }
-     March 12  **		{ Deuteronomy Chapter 33 }
-     March 13  **		{ Joshua Chapter 3 }
-     March 14  **		{ Joshua Chapter 6 }
-     March 15  **		{ Joshua Chapter 9 }
-     March 16  **		{ Joshua Chapter 11 }
-     March 17  **		{ Joshua Chapter 14 }
-     March 18  **		{ Joshua Chapter 17 }
-     March 19  **		{ Joshua Chapter 20 }
-     March 20  **		{ Joshua Chapter 22 }
-     March 21  **		{ Judges Chapter 1 }
-     March 22  **		{ Judges Chapter 3 }
-     March 23  **		{ Judges Chapter 6 }
-     March 24  **		{ Judges Chapter 8 }
-     March 25  **		{ Judges Chapter 10 }
-     March 26  **		{ Judges Chapter 12 }
-     March 27  **		{ Judges Chapter 16 }
-     March 28  **		{ Judges Chapter 18 }
-     March 29  **		{ Judges Chapter 20 }
-     March 30  **		{ Ruth Chapter 2 }
-     March 31  **		{ I Samuel Chapter 1 }
-     April 01  **		{ I Samuel Chapter 4 }
-     April 02  **		{ I Samuel Chapter 8 }
-     April 03  **		{ I Samuel Chapter 11 }
-     April 04  **		{ I Samuel Chapter 14 }
-     April 05  **		{ I Samuel Chapter 16 }
-     April 06  **		{ I Samuel Chapter 18 }
-     April 07  **		{ I Samuel Chapter 20 }
-     April 08  **		{ I Samuel Chapter 23 }
-     April 09  **		{ I Samuel Chapter 25 }
-     April 10  **		{ I Samuel Chapter 28 }
-     April 11  **		{ I Samuel Chapter 31 }
-     April 12  **		{ II Samuel Chapter 3 }
-     April 13  **		{ II Samuel Chapter 6 }
-     April 14  **		{ II Samuel Chapter 10 }
-     April 15  **		{ II Samuel Chapter 13 }
-     April 16  **		{ II Samuel Chapter 15 }
-     April 17  **		{ II Samuel Chapter 17 }
-     April 18  **		{ II Samuel Chapter 19 }
-     April 19  **		{ II Samuel Chapter 21 }
-     April 20  **		{ II Samuel Chapter 24 }
-     April 21  **		{ I Kings Chapter 2 }
-     April 22  **		{ I Kings Chapter 3 }
-     April 23  **		{ I Kings Chapter 6 }
-     April 24  **		{ I Kings Chapter 8 }
-     April 25  **		{ I Kings Chapter 9 }
-     April 26  **		{ I Kings Chapter 11 }
-     April 27  **		{ I Kings Chapter 13 }
-     April 28  **		{ I Kings Chapter 16 }
-     April 29  **		{ I Kings Chapter 18 }
-     April 30  **		{ I Kings Chapter 20 }
-       May 01  **		{ I Kings Chapter 22 }
-       May 02  **		{ II Kings Chapter 2 }
-       May 03  **		{ II Kings Chapter 5 }
-       May 04  **		{ II Kings Chapter 7 }
-       May 05  **		{ II Kings Chapter 9 }
-       May 06  **		{ II Kings Chapter 11 }
-       May 07  **		{ II Kings Chapter 14 }
-       May 08  **		{ II Kings Chapter 17 }
-       May 09  **		{ II Kings Chapter 19 }
-       May 10  **		{ II Kings Chapter 21 }
-       May 11  **		{ II Kings Chapter 23 }
-       May 12  **		{ I Chronicles Chapter 1 }
-       May 13  **		{ I Chronicles Chapter 4 }
-       May 14  **		{ I Chronicles Chapter 6 }
-       May 15  **		{ I Chronicles Chapter 8 }
-       May 16  **		{ I Chronicles Chapter 11 }
-       May 17  **		{ I Chronicles Chapter 14 }
-       May 18  **		{ I Chronicles Chapter 17 }
-       May 19  **		{ I Chronicles Chapter 21 }
-       May 20  **		{ I Chronicles Chapter 25 }
-       May 21  **		{ I Chronicles Chapter 28 }
-       May 22  **		{ II Chronicles Chapter 1 }
-       May 23  **		{ II Chronicles Chapter 5 }
-       May 24  **		{ II Chronicles Chapter 7 }
-       May 25  **		{ II Chronicles Chapter 10 }
-       May 26  **		{ II Chronicles Chapter 14 }
-       May 27  **		{ II Chronicles Chapter 18 }
-       May 28  **		{ II Chronicles Chapter 21 }
-       May 29  **		{ II Chronicles Chapter 24 }
-       May 30  **		{ II Chronicles Chapter 27 }
-       May 31  **		{ II Chronicles Chapter 30 }
-      June 01  **		{ II Chronicles Chapter 32 }
-      June 02  **		{ II Chronicles Chapter 34 }
-      June 03  **		{ Ezra Chapter 1 }
-      June 04  **		{ Ezra Chapter 4 }
-      June 05  **		{ Ezra Chapter 7 }
-      June 06  **		{ Ezra Chapter 9 }
-      June 07  **		{ Nehemiah Chapter 2 }
-      June 08  **		{ Nehemiah Chapter 5 }
-      June 09  **		{ Nehemiah Chapter 8 }
-      June 10  **		{ Nehemiah Chapter 10 }
-      June 11  **		{ Nehemiah Chapter 13 }
-      June 12  **		{ Esther Chapter 2 }
-      June 13  **		{ Esther Chapter 6 }
-      June 14  **		{ Esther Chapter 9 }
-      June 15  **		{ Job Chapter 4 }
-      June 16  **		{ Job Chapter 9 }
-      June 17  **		{ Job Chapter 15 }
-      June 18  **		{ Job Chapter 20 }
-      June 19  **		{ Job Chapter 24 }
-      June 20  **		{ Job Chapter 31 }
-      June 21  **		{ Job Chapter 34 }
-      June 22  **		{ Job Chapter 39 }
-      June 23  **		{ Psalms Chapter 2 }
-      June 24  **		{ Psalms Chapter 11 }
-      June 25  **		{ Psalms Chapter 19 }
-      June 26  **		{ Psalms Chapter 27 }
-      June 27  **		{ Psalms Chapter 34 }
-      June 28  **		{ Psalms Chapter 39 }
-      June 29  **		{ Psalms Chapter 46 }
-      June 30  **		{ Psalms Chapter 53 }
-      July 01  **		{ Psalms Chapter 61 }
-      July 02  **		{ Psalms Chapter 69 }
-      July 03  **		{ Psalms Chapter 74 }
-      July 04  **		{ Psalms Chapter 79 }
-      July 05  **		{ Psalms Chapter 86 }
-      July 06  **		{ Psalms Chapter 91 }
-      July 07  **		{ Psalms Chapter 101 }
-      July 08  **		{ Psalms Chapter 106 }
-      July 09  **		{ Psalms Chapter 109 }
-      July 10  **		{ Psalms Chapter 119 }
-      July 11  **		{ Psalms Chapter 120 }
-      July 12  **		{ Psalms Chapter 133 }
-      July 13  **		{ Psalms Chapter 142 }
-      July 14  **		{ Proverbs Chapter 1 }
-      July 15  **		{ Proverbs Chapter 6 }
-      July 16  **		{ Proverbs Chapter 10 }
-      July 17  **		{ Proverbs Chapter 14 }
-      July 18  **		{ Proverbs Chapter 18 }
-      July 19  **		{ Proverbs Chapter 22 }
-      July 20  **		{ Proverbs Chapter 26 }
-      July 21  **		{ Proverbs Chapter 30 }
-      July 22  **		{ Ecclesiastes Chapter 3 }
-      July 23  **		{ Ecclesiastes Chapter 8 }
-      July 24  **		{ Song of Solomon Chapter 1 }
-      July 25  **		{ Song of Solomon Chapter 8 }
-      July 26  **		{ Isaiah Chapter 4 }
-      July 27  **		{ Isaiah Chapter 8 }
-      July 28  **		{ Isaiah Chapter 11 }
-      July 29  **		{ Isaiah Chapter 15 }
-      July 30  **		{ Isaiah Chapter 21 }
-      July 31  **		{ Isaiah Chapter 25 }
-    August 01  **		{ Isaiah Chapter 29 }
-    August 02  **		{ Isaiah Chapter 32 }
-    August 03  **		{ Isaiah Chapter 37 }
-    August 04  **		{ Isaiah Chapter 40 }
-    August 05  **		{ Isaiah Chapter 43 }
-    August 06  **		{ Isaiah Chapter 46 }
-    August 07  **		{ Isaiah Chapter 50 }
-    August 08  **		{ Isaiah Chapter 54 }
-    August 09  **		{ Isaiah Chapter 58 }
-    August 10  **		{ Isaiah Chapter 63 }
-    August 11  **		{ Isaiah Chapter 66 }
-    August 12  **		{ Jeremiah Chapter 3 }
-    August 13  **		{ Jeremiah Chapter 6 }
-    August 14  **		{ Jeremiah Chapter 8 }
-    August 15  **		{ Jeremiah Chapter 11 }
-    August 16  **		{ Jeremiah Chapter 15 }
-    August 17  **		{ Jeremiah Chapter 18 }
-    August 18  **		{ Jeremiah Chapter 21 }
-    August 19  **		{ Jeremiah Chapter 24 }
-    August 20  **		{ Jeremiah Chapter 27 }
-    August 21  **		{ Jeremiah Chapter 30 }
-    August 22  **		{ Jeremiah Chapter 32 }
-    August 23  **		{ Jeremiah Chapter 34 }
-    August 24  **		{ Jeremiah Chapter 37 }
-    August 25  **		{ Jeremiah Chapter 39 }
-    August 26  **		{ Jeremiah Chapter 43 }
-    August 27  **		{ Jeremiah Chapter 46 }
-    August 28  **		{ Jeremiah Chapter 49 }
-    August 29  **		{ Jeremiah Chapter 51 }
-    August 30  **		{ Jeremiah Chapter 52 }
-    August 31  **		{ Lamentations Chapter 2 }
- September 01  **		{ Lamentations Chapter 5 }
- September 02  **		{ Ezekiel Chapter 4 }
- September 03  **		{ Ezekiel Chapter 8 }
- September 04  **		{ Ezekiel Chapter 11 }
- September 05  **		{ Ezekiel Chapter 14 }
- September 06  **		{ Ezekiel Chapter 17 }
- September 07  **		{ Ezekiel Chapter 19 }
- September 08  **		{ Ezekiel Chapter 21 }
- September 09  **		{ Ezekiel Chapter 24 }
- September 10  **		{ Ezekiel Chapter 26 }
- September 11  **		{ Ezekiel Chapter 29 }
- September 12  **		{ Ezekiel Chapter 32 }
- September 13  **		{ Ezekiel Chapter 34 }
- September 14  **		{ Ezekiel Chapter 37 }
- September 15  **		{ Ezekiel Chapter 40 }
- September 16  **		{ Ezekiel Chapter 41 }
- September 17  **		{ Ezekiel Chapter 44 }
- September 18  **		{ Ezekiel Chapter 47 }
- September 19  **		{ Daniel Chapter 1 }
- September 20  **		{ Daniel Chapter 3 }
- September 21  **		{ Daniel Chapter 5 }
- September 22  **		{ Daniel Chapter 7 }
- September 23  **		{ Daniel Chapter 10 }
- September 24  **		{ Daniel Chapter 12 }
- September 25  **		{ Hosea Chapter 5 }
- September 26  **		{ Hosea Chapter 10 }
- September 27  **		{ Joel Chapter 2 }
- September 28  **		{ Amos Chapter 3 }
- September 29  **		{ Amos Chapter 7 }
- September 30  **		{ Jonah Chapter 1 }
-   October 01  **		{ Micah Chapter 4 }
-   October 02  **		{ Nahum Chapter 2 }
-   October 03  **		{ Habakkuk Chapter 3 }
-   October 04  **		{ Haggai Chapter 1 }
-   October 05  **		{ Zechariah Chapter 4 }
-   October 06  **		{ Zechariah Chapter 9 }
-   October 07  **		{ Zechariah Chapter 14 }
-   October 08  **		{ Malachi Chapter 4 }
-   October 09  **		{ Matthew Chapter 5 }
-   October 10  **		{ Matthew Chapter 7 }
-   October 11  **		{ Matthew Chapter 10 }
-   October 12  **		{ Matthew Chapter 13 }
-   October 13  **		{ Matthew Chapter 14 }
-   October 14  **		{ Matthew Chapter 17 }
-   October 15  **		{ Matthew Chapter 20 }
-   October 16  **		{ Matthew Chapter 22 }
-   October 17  **		{ Matthew Chapter 25 }
-   October 18  **		{ Matthew Chapter 27 }
-   October 19  **		{ Matthew Chapter 28 }
-   October 20  **		{ Mark Chapter 3 }
-   October 21  **		{ Mark Chapter 6 }
-   October 22  **		{ Mark Chapter 8 }
-   October 23  **		{ Mark Chapter 10 }
-   October 24  **		{ Mark Chapter 12 }
-   October 25  **		{ Mark Chapter 14 }
-   October 26  **		{ Mark Chapter 16 }
-   October 27  **		{ Luke Chapter 2 }
-   October 28  **		{ Luke Chapter 4 }
-   October 29  **		{ Luke Chapter 7 }
-   October 30  **		{ Luke Chapter 8 }
-   October 31  **		{ Luke Chapter 10 }
-  November 01  **		{ Luke Chapter 12 }
-  November 02  **		{ Luke Chapter 14 }
-  November 03  **		{ Luke Chapter 16 }
-  November 04  **		{ Luke Chapter 19 }
-  November 05  **		{ Luke Chapter 21 }
-  November 06  **		{ Luke Chapter 23 }
-  November 07  **		{ John Chapter 1 }
-  November 08  **		{ John Chapter 4 }
-  November 09  **		{ John Chapter 6 }
-  November 10  **		{ John Chapter 8 }
-  November 11  **		{ John Chapter 10 }
-  November 12  **		{ John Chapter 12 }
-  November 13  **		{ John Chapter 15 }
-  November 14  **		{ John Chapter 18 }
-  November 15  **		{ John Chapter 20 }
-  November 16  **		{ Acts Chapter 2 }
-  November 17  **		{ Acts Chapter 5 }
-  November 18  **		{ Acts Chapter 7 }
-  November 19  **		{ Acts Chapter 9 }
-  November 20  **		{ Acts Chapter 12 }
-  November 21  **		{ Acts Chapter 14 }
-  November 22  **		{ Acts Chapter 16 }
-  November 23  **		{ Acts Chapter 19 }
-  November 24  **		{ Acts Chapter 21 }
-  November 25  **		{ Acts Chapter 24 }
-  November 26  **		{ Acts Chapter 27 }
-  November 27  **		{ Romans Chapter 1 }
-  November 28  **		{ Romans Chapter 4 }
-  November 29  **		{ Romans Chapter 8 }
-  November 30  **		{ Romans Chapter 11 }
-  December 01  **		{ Romans Chapter 15 }
-  December 02  **		{ I Corinthians Chapter 3 }
-  December 03  **		{ I Corinthians Chapter 8 }
-  December 04  **		{ I Corinthians Chapter 11 }
-  December 05  **		{ I Corinthians Chapter 15 }
-  December 06  **		{ II Corinthians Chapter 1 }
-  December 07  **		{ II Corinthians Chapter 6 }
-  December 08  **		{ II Corinthians Chapter 11 }
-  December 09  **		{ Galatians Chapter 2 }
-  December 10  **		{ Galatians Chapter 6 }
-  December 11  **		{ Ephesians Chapter 5 }
-  December 12  **		{ Philippians Chapter 2 }
-  December 13  **		{ Colossians Chapter 2 }
-  December 14  **		{ I Thessalonians Chapter 3 }
-  December 15  **		{ I Timothy Chapter 1 }
-  December 16  **		{ II Timothy Chapter 1 }
-  December 17  **		{ Titus Chapter 2 }
-  December 18  **		{ Hebrews Chapter 3 }
-  December 19  **		{ Hebrews Chapter 8 }
-  December 20  **		{ Hebrews Chapter 11 }
-  December 21  **		{ James Chapter 2 }
-  December 22  **		{ I Peter Chapter 1 }
-  December 23  **		{ I Peter Chapter 5 }
-  December 24  **		{ I John Chapter 2 }
-  December 25  **		{ II John Chapter 1 }
-  December 26  **		{ Revelation of John Chapter 2 }
-  December 27  **		{ Revelation of John Chapter 7 }
-  December 28  **		{ Revelation of John Chapter 11 }
-  December 29  **		{ Revelation of John Chapter 15 }
-  December 30  **		{ Revelation of John Chapter 19 }
-  December 31  **		{ The End Chapter 0 }
