@@ -20,7 +20,7 @@ use POSIX qw(strftime);
 my %opt = (mp3 => $cache, kjv => $kjv); # defaults
 
 GetOptions(\%opt, qw(mp3|m=s lyric|l kjv|t=s verbose|v words|w n|dry
-read|r=i))
+read|r=i a=s))
     or die "usage: $0 [options] '<book> Chapter <num>'
 -m | --mp3	location of mp3 files ($opt{mp3})
 -l |--lyric	generate .lrc lyric files instead, from:
@@ -29,6 +29,7 @@ read|r=i))
 -w | --words	show syllables per word with -l
 -n | --dry	don't write .lrc with -l, useful with -v -s
 -r | --read = N	generate daily reading schedule for N days
+-a <-r file>	annotate reading schedule into listed files
 ";
 
 chdir $cache or die $!;
@@ -46,6 +47,10 @@ if ($opt{lyric}) {		# generate lyric files for mythmusic!
 } elsif ($opt{read}) {	  # generate time-based daily reading schedule
 
     &readplan;
+
+} elsif ($opt{a}) {		# add reading schedule to each file
+
+    &annotate;
 
 } elsif (@ARGV and $ARGV[0] =~ /(.+) Chapter (\d+)/) { # original purpose: audio player
 
@@ -102,6 +107,7 @@ sub lyrics {
     while (<FILE>) {
 	next if / mode: kjv /;	# skip header
 	s/\(KJV\)//;		# skip footer
+	s/\s+\*\*\*.*//;	# skip reading schedule
 	if (/\{ (The Book of .+|.+ Chapter \d+) \}/) {
 	    &lyric(\@line) and @line = ();
 	}
@@ -143,7 +149,7 @@ sub lyric {
     return 1;
 }
 
-sub readplan {			# generate reading schedule
+sub readplan { # generate time-based reading schedule from lrc.log and  *.lrc
     my $sec = 0;
     my %sec;
     open FILE, 'lrc.log' or die $!; # output from -l, required
@@ -163,7 +169,7 @@ sub readplan {			# generate reading schedule
 	}
 	$time += $sec{$lrc} || 0;
     }
-    $time{'{ The End }'} = $time;
+    $time{'{ The End Chapter 0 }'} = $time;
     $time = $last = 0;
     my $date = timelocal(0, 0, 12, 1, 0, 3); # 1973 - 1975 no leap years
     my $days = $opt{read} > 30 ? $opt{read} : 365;
@@ -193,7 +199,37 @@ sub readplan {			# generate reading schedule
 	$last = $this;
 	$date += 24 * 60 * 60;
     }
-    printf "(goal=%.0f seconds n/$days, d=delta %d-%d=%d)\n",
-	$one, $min, $max, $max - $min
+    printf "(goal=%.0f seconds for $days days, %d-%d=%d, +/-=delta)\n",
+	$one, $max, $min, $max - $min
 	if $opt{verbose};
+}
+
+sub annotate { # use -r output to add reading schedule into given files unless there
+    open FILE, $opt{a} or die $!;
+    my $last = '{ Genesis Chapter 1 }';
+    my %date;
+    while (<FILE>) {
+	/\s*(\w+\s+\d+)\s+(\{ .* Chapter \d+ \})/ or next;
+	$date{$last} = $1;
+	$last = $2;
+    }
+
+    my $tmp = ".tmp$$";
+    for my $file (@ARGV) {
+	open FILE, $file or die $!;
+	open OUT, '>', $tmp or die $!;
+	my $changed = 0;
+	while (<FILE>) {
+	    print OUT and next if /\*\*\*$/;
+	    /(\{ .* Chapter \d+ \})/ and
+		$date{$1} and
+		s/(\{ .* Chapter \d+ \})/$1\t*** $date{$1} ***/ and
+		$changed = 1;
+	    print OUT;
+	}
+	close OUT or die $!;
+	$changed
+	    ? (rename $tmp, $file or die $!)
+	    : (unlink $tmp or die $!);
+    }
 }
