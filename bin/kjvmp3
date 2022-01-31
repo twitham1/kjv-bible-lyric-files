@@ -107,7 +107,7 @@ sub lyrics {
     while (<FILE>) {
 	next if / mode: kjv /;	# skip header
 	s/\(KJV\)//;		# skip footer
-	s/\s+\*\*\*.*//;	# skip reading schedule
+	s/\s+\*\*.*//;		# skip reading schedule
 	if (/\{ (The Book of .+|.+ Chapter \d+) \}/) {
 	    &lyric(\@line) and @line = ();
 	}
@@ -204,7 +204,7 @@ sub readplan { # generate time-based reading schedule from lrc.log and  *.lrc
 	if $opt{verbose};
 }
 
-sub annotate { # use -r output to add reading schedule into given files unless there
+sub annotate { # use -r output to add reading schedule into given files
     open FILE, $opt{a} or die $!;
     my $last = '{ Genesis Chapter 1 }';
     my %date;
@@ -213,23 +213,31 @@ sub annotate { # use -r output to add reading schedule into given files unless t
 	$date{$last} = $1;
 	$last = $2;
     }
-
+    my $d; my %num;
+    open FILE, $kjv or die $!;
+    while (<FILE>) {		# chapters per day
+	if (/(\{ .* Chapter \d+ \})/) {
+	    $date{$1} =  $date{$1} || $d;
+	    $num{$d = $date{$1}}++;
+	}
+    }
+    my %this;
     my $tmp = ".tmp$$";
-    for my $file (@ARGV) {
+    for my $file (@ARGV) {	# *.lrc or kjv.txt
 	open FILE, $file or die $!;
 	open OUT, '>', $tmp or die $!;
-	my $changed = 0;
 	while (<FILE>) {
-	    print OUT and next if /\*\*\*$/;
-	    /(\{ .* Chapter \d+ \})/ and
-		$date{$1} and
-		s/(\{ .* Chapter \d+ \})/$1\t*** $date{$1} ***/ and
-		$changed = 1;
+	    if (s/(\{ .* Chapter \d+ \}).*/$1/ and my $d = $date{$1}) {
+		my $n = 40 - length($1);
+		my $s = " " x ($n % 8);
+		$s .= "\t" x ($n / 8);
+		++$this{$d};
+		s{(\{ .* Chapter \d+ \}).*}
+		{$1$s** $date{$1} $this{$d}/$num{$d} **};
+	    }
 	    print OUT;
 	}
 	close OUT or die $!;
-	$changed
-	    ? (rename $tmp, $file or die $!)
-	    : (unlink $tmp or die $!);
+	rename $tmp, $file or die $!;
     }
 }
