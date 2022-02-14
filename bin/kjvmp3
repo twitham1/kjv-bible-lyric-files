@@ -83,8 +83,11 @@ sub len {			# return the length of the text
     for my $line (@_) {
 	$line =~ /^(\S+ \d+:\d+:)?\s*(.*)/; # ignore chapter/verse leader
 
-	(my $text = $2) =~ s/([;:,])/ PAUSE /g; # punctuation pauses
-	$text =~ s/([?.])/ STOP STOP /g;	# sentence pauses
+	(my $text = $2) =~ s/\s+\*\*.*//; # ignore reading schedule
+
+	$text =~ s/([;:,])/ PAUSE /g; # punctuation pauses
+
+	$text =~ s/([{}?.])/ STOP STOP /g; # sentence pauses
 
 	$text =~ s/\W+/ /g; # strip italics and quotes and break hyphens
 
@@ -107,7 +110,6 @@ sub lyrics {
     while (<FILE>) {
 	next if / mode: kjv /;	# skip header
 	s/\(KJV\)//;		# skip footer
-	s/\s+\*\*.*//;		# skip reading schedule
 	if (/\{ (The Book of .+|.+ Chapter \d+) \}/) {
 	    &lyric(\@line) and @line = ();
 	}
