@@ -1,6 +1,8 @@
 #!/usr/bin/perl -w
 
-# to get a copy for kjv-mode say: kjv gen 1-2000 > kjv.txt 
+# KJV shell for sword by twitham@sbcglobal.net
+
+# to get a copy for emacs kjv-mode say: kjv gen 1-2000 > kjv.txt
 
 use Text::Wrap;
 
@@ -27,22 +29,22 @@ if (@ARGV) {			# one lookup and exit
     }
 }
 
-sub clean {
+sub clean { # strip markup but keep paragraphs, italics, quotes for plain text
     my $l = shift;
     $l =~ s!<html>.*<body>!!;
     $l =~ s!</body>.*</html>!!;
     $l =~ s!</?w.*?>!!g;
-    $l =~ s!</?q.*?>!"!g;
-    $l =~ s!<transChange.*?>![!g;
+    $l =~ s!</?q.*?>!"!g;	  # quote - words of Christ
+    $l =~ s!<transChange.*?>![!g; # italics - words added for english
     $l =~ s!</transChange>!]!g;
-    $l =~ s!<divineName>(\S+)</divineName>!\U$1!g;
+    $l =~ s!<divineName>(\S+)</divineName>!\U$1!g; # uppercase: LORD
     $l =~ s!<chapter.*?>!!g;
     $l =~ s!</?foreign.*?>!!g;
     $l =~ s!</?inscription>!!g;
     $l =~ s!<div .*"book"/>!!;
-    $l =~ s!(.+?:) +!$1 . (length($1) < 8 ? "\t\t" : "\t")!e;
+    $l =~ s!(.+?:) +!$1 . (length($1) < 8 ? "\t\t" : "\t")!e; # chapter/verse
     $l =~ s!\s+$!!;
-    $l = "\n$l" if $l =~ s!<milestone.*?"x-p"/>!!g;
+    $l = "\n$l" if $l =~ s!<milestone.*?"x-p"/>!!g; # paragraph
     return $l;
 }
 
@@ -65,7 +67,7 @@ BEGIN {
 	warn "$cmd\n";
 	open PIPE, "$cmd |" or die "can't pipe from diatheke: $!\n";
 
-	# in 1.8, Psalm subtitles wrongly appear below the correct
+	# In sword 1.8, Psalm subtitles wrongly appear below the first
 	# verse.  So we have to "look ahead" to strip them from next
 	# verse and move them before this verse.  -twitham
 	
@@ -83,15 +85,15 @@ BEGIN {
 
 	    $_ = clean $_;
 
-	    if (/^\s*(.+) 1:1:/) {
+	    if (/^\s*(.+) 1:1:/) { # book header
 		my $name = $name{$1} || $1;
 		print "\n*\t{ The Book of $name }\n";
 	    }
-	    if (/^\s*(.+) (\d+):1:/) {
+	    if (/^\s*(.+) (\d+):1:/) { # chapter header
 		my $name = $name{$1} || $1;
 		print "\n**\t\t{ $name Chapter $2 }\n\n";
 	    }
-	    my $p = s/^\n// ? 1 : 0;
+	    my $p = s/^\n// ? 1 : 0; # paragraph?
 	    $line = wrap("", "\t\t", $_) . "\n";
 	    $line = "\n$line" if $p;
 	}
@@ -99,71 +101,3 @@ BEGIN {
 	close PIPE;
     }
 }
-
-__END__
-# 	    s/$high/sprintf "\\%o", ord $&/eg;
-# 	    s/\\342\\200\\231/\'/g; # e.g. john 3:29 bridegroom's
-
-use Sword;
-
-$mgr = new Sword::SWMgr() or die;
-print join "\n", keys %$mgr;
-$mod = $mgr->module($ARGV[0]) or die "bogus module?\n";	# KJV, KJVD, Pilgrim...
-print join "\n", $mod->Name, $mod->Type, $mod->Encoding, $mod->Markup,
-    $mod->getConfig, '';
-$mod->top;
-print join "\n", @foo = $mod->getEntryAttributes, $mod->isWritable, '';
-#exit;
-#print "Disp: ", $mod->Disp, "\n"; # undefined
-do {
-#      $key = $mod->CreateKey;
-#      $vkey = new Sword::VerseKey($key);
-#  #    $vkey = $key->VerseKey;
-#      $key->Persist;
-#      if ($vkey) {
-#  	$vkey->Headings(1);
-#  	$vkey->AutoNormalize(0);
-#      }
-#      $mod->SetKey($key);
-#      print "key: ", $mod->Key, "\n";
-#  #    $mod->Search("John");
-#  #      $buf = $mod->getRawEntry;
-#  #      print "$key\n$buf\n\n";
-    print "\n", $mod->KeyText, " ";
-#    print $mod->text;
-#    print $mod->RenderText;	# undefined
-#    print $mod->StripText;
-    for (0..5) {
-	$mod->Markup($_);		# this don't work?
-	$mod->Display;
-	print "\n";
-    }
-    last;
-} while ($mod->next);
-#} while ($i++ < 3);
-
-__END__
-
-while (<>) {
-    $b = $1 and $chapter = 1 and $book++
-	if /^((\d+\s+)?(\S+|Song of Solomon))$/;
-    $chapter = $2 if /^(Chapter|Psalm) (\d+)/;
-    if (/^(\d+)(.+)/) {
-	print "$book/$b/$chapter/$1\n" unless $done{"$book/$b"}++;
-    }
-}
-__END__
-    next unless my($book) = /^(\d*\D+)\d+/;
-    print "$book\n" unless $done{$book}++;
-
-
-; cool stuff for emacs:
-(setq font-lock-keywords
-      '(("{\\([^}]+\\)"
-	 (1 font-lock-comment-face append))
-	("\\([^{]+\\)}"
-	 (1 font-lock-comment-face append))
-	("\\[\\([^\]]+\\)"
-	 (1 'italic prepend))
-	("\\([^\[]+\\)\\]"
-	 (1 'italic prepend))))
