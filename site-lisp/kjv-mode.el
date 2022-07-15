@@ -1,11 +1,11 @@
 ;;; kjv-mode.el --- GNU Emacs mode for reading the King James Bible
 
-;; @(#)$Id$
+;; @(#)$Id: kjv-mode.el,v 1.2 2019/01/20 05:25:44 twitham Exp twitham $
 ;; Copyright (C) 2005 Timothy D. Witham
 
 ;; Author: Tim Witham <twitham@surewest.net>
 ;; Created: 01 January 2005
-;; Version: $Revision$
+;; Version: $Revision: 1.2 $
 ;; Keywords: king james bible text mode
 
 ;; This file is not currently part of GNU Emacs but is licensed the same:
@@ -33,14 +33,16 @@
 
 ;;; Code:
 
+(require 'bookmark)			; to load reading position
+
 (defface kjv-invisible-face
-  '((t (:background "white" :foreground "white")))
+  '((t (:height 1)))
   "Face used to make []s invisible in `kjv-mode'.")
 
 (defconst kjv-font-lock-keywords-1
   ;; syntax fontification automatically does strings (words of Christ)
   (list
-   '("{.*}" 0 'bold prepend)
+   '("{[^}]+}" 0 'bold prepend)
    '("\\(L\\)ORD" 1 'bold prepend)	; divine name
    ;;       '("\\[" 0 '(italic invisible t))
    '("\\(\\[\\)[^[]+\\(\\]\\)" (0 'italic prepend)
@@ -145,6 +147,8 @@ Turning on KJV mode runs the normal hook `kjv-mode-hook'."
   (set-syntax-table kjv-mode-syntax-table)
   (make-local-variable 'paragraph-start)
   (setq paragraph-start "\n")
+  (make-local-variable 'bidi-display-reordering)
+  (setq bidi-display-reordering nil)
   (make-local-variable 'font-lock-defaults)
   (setq font-lock-defaults '((kjv-font-lock-keywords
 			      kjv-font-lock-keywords-1
@@ -161,6 +165,8 @@ Turning on KJV mode runs the normal hook `kjv-mode-hook'."
   (toggle-read-only 1)
   (outline-minor-mode)
   (kjv-today)
+  (bookmark-maybe-load-default-file)
+  (bookmark-jump kjv-bookmark-string)
   (run-hooks 'kjv-mode-hook))
 
 ;;; two functions to find named objects for imenu
