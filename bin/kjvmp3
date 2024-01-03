@@ -2,13 +2,15 @@
 
 # KVJ audio player for emacs kjv-mode, by twitham@sbcglobal.net
 
-# can also now generate .lrc lyric files for mythmusic!
+# Can also now generate .lrc lyric files for mythmusic!
 
-# Downloaded from https://www.audiotreasure.com/indexKJV.htm in 2022:
-my $cache = '/var/lib/mythtv/music/iTunes/iTunes Media/Podcasts/KJV';
+# # Downloaded from https://www.audiotreasure.com/indexKJV.htm in 2022:
+# (my $path = $0) =~ s{/[^/]+$}{};
+# my $cache = "$path/../KJV";
+my $cache = '.';
 
 # converted from Sword by ~twitham/bin/kjv gen 1-2000 > kjv.txt in 2022:
-my $kjv = 'zcat /home/twitham/kjv.txt.gz |';
+my $kjv = 'kjv.txt';
 
 use warnings;
 use strict;
@@ -16,6 +18,7 @@ use Getopt::Long;
 use Lingua::EN::Syllable;
 use Time::Local;
 use POSIX qw(strftime);
+use File::Basename;
 
 my %opt = (mp3 => $cache, kjv => $kjv); # defaults
 
@@ -33,11 +36,22 @@ read|r=i a=s))
 ";
 
 chdir $cache or die $!;
+my $who = -f '66_Revelation022.mp3' ? 'dw' # Dan Wagner
+    : -f '66_Revelation_22.mp3' ? 'sj'	   # Stephen Johnston
+    : '??';			# hack!!! file format indicates artist
 
+# Fix Pss 145 by ending time before the included Pss 146:1-8
+# Fix Nah 3 by ending time after the missing Nah 3:17-19
+my %fixlen = $who eq 'dw' ? (
+    'Psalms 145' => ': 0:02:19', # exiftool -duration
+    'Nahum 3' => ': 0:03:20',
+    )
+    : ();
+	   
 binmode STDOUT, ":encoding(UTF-8)";
 
 opendir DIR, '.' or die $!;
-my @mp3 = sort grep /^\d+_/, readdir DIR;
+my @mp3 = sort grep /^\d+_.*\.mp3$/, readdir DIR;
 closedir DIR;
 
 if ($opt{lyric}) {		# generate lyric files for mythmusic!
@@ -63,7 +77,18 @@ sub file {			# book/chapter -> .mp3 filename
     $book =~ s/ /_/g;
     $book =~ s/^III_/3/ or $book =~ s/^II_/2/ or  $book =~ s/^I_/1/;
     $book =~ s/_of_John//;
-    my $chap = sprintf "%s%03d", $book, $chapter;
+    my $chap = sprintf "%s%03d", $book, $chapter; # DW == default
+    if ($who eq 'sj') {	    # tweaks to match zip filenames as/of 2022
+	$book =~ s/Psalms/Psalm/;
+	$book =~ s/Proverbs/Prov/;
+	$book =~ s/Solomon/Soloman/;
+	$book =~ s/Daniel/Daniell/;
+	$book =~ s/Corinthians/Cor/;
+	$book =~ s/Galatians/Gal/;
+	$book =~ s/Thessalonians/Thess/;
+	my $n = $book =~ /Psalm/ ? 3 : 2;
+	$chap = sprintf "%s_%0${n}d", $book, $chapter;
+    }
     my $file = (grep /$chap.mp3/, @mp3)[0] || (grep /$book.mp3/, @mp3)[0] || 0;
     return $file;
 }
@@ -106,7 +131,7 @@ sub len {			# return the length of the text
 
 sub lyrics {
     my @line;
-    open FILE, $kjv or die "$kjv: $!";
+    open FILE, $opt{kjv} or die "$opt{kjv}: $!";
     while (<FILE>) {
 	next if / mode: kjv /;	# skip header
 	s/\(KJV\)//;		# skip footer
@@ -127,11 +152,12 @@ sub lyric {
     my($book, $chap) = ($1, $2);
     my $file = file($book, $chap);
     $file or warn "no file in $head\n" and return;
-    my $duration = `exiftool -duration $file`;
+    my $duration = $fixlen{"$book $chap"} || `exiftool -duration $file`;
     my($h, $m, $s) = ($duration =~ /: (\d+):(\d+):(\d+)/);
     defined $s or ($h, $m, $s) = ($duration =~ /: ()()(\d+\.\d+) s/);
     defined $s or warn "unknown seconds in $file\n" and return;
     $duration = ($h || 0) * 3600 + ($m || 0) * 60 + $s;
+    $duration -= 3;	       # seconds of silence on the end of file
     my $len = len(@$lineref);
     my $per = $duration / $len;	# seconds per word of text
     my $t = 0;
@@ -178,7 +204,7 @@ sub readplan { # generate time-based reading schedule from lrc.log and  *.lrc
     my $one = $sec / $days;
     my $i = my $delta = my $max = 0;
     my $min = 999999;
-    for (my $time = $one; $time <= $sec; $time += $one) {
+    for (my $time = $one; $time < $sec + $one / 2; $time += $one) {
 
 	my $goal = $last + $one; # daily reading goal, but:
 	$goal -= 0.3 * $delta;	 # move toward staying on-time
@@ -216,7 +242,7 @@ sub annotate { # use -r output to add reading schedule into given files
 	$last = $2;
     }
     my $d; my %num;
-    open FILE, $kjv or die $!;
+    open FILE, $opt{kjv} or die "$opt{kjv}: $!";
     while (<FILE>) {		# chapters per day
 	if (/(\{ .* Chapter \d+ \})/) {
 	    $date{$1} =  $date{$1} || $d;

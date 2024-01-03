@@ -1,11 +1,11 @@
 ;;; kjv-mode.el --- GNU Emacs mode for reading the King James Bible
 
-;; @(#)$Id: kjv-mode.el,v 1.2 2019/01/20 05:25:44 twitham Exp twitham $
+;; @(#)$Id: kjv-mode.el,v 1.3 2022/07/15 05:24:24 twitham Exp $
 ;; Copyright (C) 2005 Timothy D. Witham
 
-;; Author: Tim Witham <twitham@surewest.net>
+;; Author: Tim Witham <twitham@sbcglobal.net>
 ;; Created: 01 January 2005
-;; Version: $Revision: 1.2 $
+;; Version: $Revision: 1.3 $
 ;; Keywords: king james bible text mode
 
 ;; This file is not currently part of GNU Emacs but is licensed the same:
