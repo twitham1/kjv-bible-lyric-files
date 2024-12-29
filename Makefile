@@ -27,8 +27,9 @@ yearplan.txt: lrc.log
 
 # annotate reading plan into *.lrc and summarize
 yearsum.txt: yearplan.txt
-	${KJVMP3} -a yearplan.txt *.lrc \
-	&& grep ' 1/' *.lrc | perl -pe 's/.*\{/\{/; s/Chapter //' > yearsum.txt
+	cp kjv.txt kjvplan.txt && \
+	${KJVMP3} -a yearplan.txt kjvplan.txt *.lrc \
+	&& grep ' 1/' kjvplan.txt | perl -pe 's/.*\{/\{/; s/Chapter //' > yearsum.txt
 
 	# && cp kjv.txt kjv-read.txt \
 	# && ${KJVMP3} -a yearplan.txt kjv-read.txt \
