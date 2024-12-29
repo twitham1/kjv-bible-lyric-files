@@ -23,21 +23,25 @@ use File::Basename;
 my %opt = (mp3 => $cache, kjv => $kjv); # defaults
 
 GetOptions(\%opt, qw(mp3|m=s lyric|l kjv|t=s verbose|v words|w n|dry
-read|r=i a=s))
+read|r=i a=s fast|f check|c))
     or die "usage: $0 [options] '<book> Chapter <num>'
 -m | --mp3	location of mp3 files ($opt{mp3})
--l |--lyric	generate .lrc lyric files instead, from:
+-c | --check	check the chapter to file map
+-l | --lyric	generate .lrc lyric files instead, from:
 -t | --kjv	location of KJV text ($opt{kjv}), for -l
+-f | --fast	skip existing .lrc files
 -v | --verbose	show syllables per line with -l, reading stats with -r
 -w | --words	show syllables per word with -l
 -n | --dry	don't write .lrc with -l, useful with -v -s
 -r | --read = N	generate daily reading schedule for N days
 -a <-r file>	annotate reading schedule into listed files
 ";
+$opt{check} and $opt{lyric} = 1;
 
 chdir $cache or die $!;
 my $who = -f '66_Revelation022.mp3' ? 'dw' # Dan Wagner
     : -f '66_Revelation_22.mp3' ? 'sj'	   # Stephen Johnston
+    : -f 'Revelations 22.mp3' ? 'as'	   # Alexander Scourby
     : '??';			# hack!!! file format indicates artist
 
 # Fix Pss 145 by ending time before the included Pss 146:1-8
@@ -51,7 +55,7 @@ my %fixlen = $who eq 'dw' ? (
 binmode STDOUT, ":encoding(UTF-8)";
 
 opendir DIR, '.' or die $!;
-my @mp3 = sort grep /^\d+_.*\.mp3$/, readdir DIR;
+my @mp3 = sort grep /\.mp3$/, readdir DIR;
 closedir DIR;
 
 if ($opt{lyric}) {		# generate lyric files for mythmusic!
@@ -81,13 +85,25 @@ sub file {			# book/chapter -> .mp3 filename
     if ($who eq 'sj') {	    # tweaks to match zip filenames as/of 2022
 	$book =~ s/Psalms/Psalm/;
 	$book =~ s/Proverbs/Prov/;
-	$book =~ s/Solomon/Soloman/;
+	$book =~ s/Solomon/Soloman/; # files are misspelled...
 	$book =~ s/Daniel/Daniell/;
-	$book =~ s/Corinthians/Cor/;
+	$book =~ s/Corinthians/Cor/; # ... or abbreviated
 	$book =~ s/Galatians/Gal/;
 	$book =~ s/Thessalonians/Thess/;
 	my $n = $book =~ /Psalm/ ? 3 : 2;
 	$chap = sprintf "%s_%0${n}d", $book, $chapter;
+    } elsif ($who eq 'as') { # tweaks to match zip filenames as/of 2024
+	$book =~ s/_/ /g;
+	$book =~ s/^([123])(\S+)/$1 $2/;
+	$book =~ s/Psalms/Psalm/;
+	$book =~ s/(Revelation)\b/$1s/;
+	for my $n (3, 2, 1) {
+	    my $file = sprintf "%s %0${n}d.mp3", $book, $chapter;
+	    # warn "checking for $file";
+	    -f $file and return $file;
+	}
+	-f "$book.mp3" and return "$book.mp3"; # 1 chapter books
+	return 0;
     }
     my $file = (grep /$chap.mp3/, @mp3)[0] || (grep /$book.mp3/, @mp3)[0] || 0;
     return $file;
@@ -136,7 +152,8 @@ sub lyrics {
 	next if / mode: kjv /;	# skip header
 	s/\(KJV\)//;		# skip footer
 	if (/\{ (The Book of .+|.+ Chapter \d+) \}/) {
-	    &lyric(\@line) and @line = ();
+	    &lyric(\@line);
+	    @line = ();
 	}
 	push @line, $_;
     }
@@ -148,11 +165,15 @@ sub lyric {
     my($lineref) = @_;
     my $head = (grep { /\{ .+ Chapter \d+ \}/ } @$lineref)[0] or return;
     $head =~ /\{ (.+) Chapter (\d+) \}/ or return;
-    grep { $head =~ /$_/ } @ARGV or return 1 if @ARGV;
+    grep { $head =~ /$_/ } @ARGV or return 1
+	if @ARGV;
     my($book, $chap) = ($1, $2);
     my $file = file($book, $chap);
-    $file or warn "no file in $head\n" and return;
-    my $duration = $fixlen{"$book $chap"} || `exiftool -duration $file`;
+    $file or print "no file in $head\n" and return;
+    (my $out = $file) =~ s/.mp3/.lrc/;
+    $opt{check} and print "$book $chap -> $file\n" and return;
+    $opt{fast} and -s $out and warn "-f skipping $out" and return;
+    my $duration = $fixlen{"$book $chap"} || `exiftool -duration '$file'`;
     my($h, $m, $s) = ($duration =~ /: (\d+):(\d+):(\d+)/);
     defined $s or ($h, $m, $s) = ($duration =~ /: ()()(\d+\.\d+) s/);
     defined $s or warn "unknown seconds in $file\n" and return;
@@ -161,7 +182,6 @@ sub lyric {
     my $len = len(@$lineref);
     my $per = $duration / $len;	# seconds per word of text
     my $t = 0;
-    (my $out = $file) =~ s/.mp3/.lrc/;
     open OUT, '>', ($opt{n} ? '/dev/null' : $out) or die $!;
     for my $line (@$lineref) {
 	my $min = int($t / 60);
@@ -172,22 +192,25 @@ sub lyric {
 	print "$len\t$this" if $opt{verbose};
 	$t += $len * $per;
     }
-    printf "%4d seconds in %4d lines in $out\t(%.5f)\n",
-	$duration, scalar @$lineref, $per;
+    printf "%4d seconds in %4d lines @ %5.2f syllable/s in $out\n",
+	$duration, scalar @$lineref, $len / $duration;
     return 1;
 }
 
 sub readplan { # generate time-based reading schedule from lrc.log and  *.lrc
     my $sec = 0;
     my %sec;
+    my @file;
     open FILE, 'lrc.log' or die $!; # output from -l, required
     while (<FILE>) {
-	/(\d+) seconds .* (\w+.lrc)/ and $sec += $1
-	    and $sec{$2} = $1;
+	/(\d+) seconds .* in (.*.lrc)/ or next;
+	$sec += $1;
+	$sec{$2} = $1;
+	push @file, $2;
     }
     my %time;
     my $time = my $this = my $last = 0;
-    for my $lrc (<*.lrc>) {
+    for my $lrc (@file) {
 	open FILE, '<:encoding(UTF-8)', $lrc or die $!;
 	while (<FILE>) {
 	    chomp;
