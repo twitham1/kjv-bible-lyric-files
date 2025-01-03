@@ -4,11 +4,13 @@
 # generate kjv.txt from Sword, *.lrc from *.mp3, year*txt reading
 # schedules based on mp3 length, annotate schedule into *.lrc
 
+WHO:=$(shell pwd | perl -pe 's{.*/}{}')
+
 # KJV shell for Sword, by twitham
-KJV=bin/kjv
+KJV=../bin/kjv
 
 # KJV mp3 player and lyric file generator
-KJVMP3=bin/kjvmp3
+KJVMP3=../bin/kjvmp3
 
 # get the text, measure, plan reading, annotate, build lyrics
 all: lrc.log
@@ -36,6 +38,16 @@ yearsum.txt: yearplan.txt
 # generate lyrics for all *.mp3
 lrc.log: yearsum.txt
 	${KJVMP3} -l | tee lrc.log
+
+# make a distribution for this set of audio files
+dist: lrc.log
+	cd .. && \
+	egrep -A6 '^DIR:	${WHO}' README.md > ${WHO}/README && \
+	cat ./${WHO}/README > README && \
+	cat README.md >> README && \
+	tar zcvf KJV-${WHO}.tgz README ${WHO}/README \
+	${WHO}/*.txt ${WHO}/*.log ${WHO}/*.lrc \
+	site-lisp bin
 
 clean:
 	rm kjv*.tmp kjv*.txt year*.txt *.lrc lrc.log
