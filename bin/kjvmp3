@@ -2,14 +2,14 @@
 
 # KVJ audio player for emacs kjv-mode, by twitham@sbcglobal.net
 
-# Can also now generate .lrc lyric files for mythmusic!
+# Can also now generate .lrc lyric files for audio players!
 
 # # Downloaded from https://www.audiotreasure.com/indexKJV.htm in 2022:
 # (my $path = $0) =~ s{/[^/]+$}{};
 # my $cache = "$path/../KJV";
 my $cache = '.';
 
-# converted from Sword by ~twitham/bin/kjv gen 1-2000 > kjv.txt in 2022:
+# converted from Sword by ./kjv gen 1-2000 > kjv.txt in 2024:
 my $kjv = 'kjv.txt';
 
 use warnings;
@@ -23,9 +23,10 @@ use File::Basename;
 my %opt = (mp3 => $cache, kjv => $kjv); # defaults
 
 GetOptions(\%opt, qw(mp3|m=s lyric|l kjv|t=s verbose|v words|w n|dry
-read|r=i a=s fast|f check|c))
+read|r=i a=s fast|f check|c syllable|s))
     or die "usage: $0 [options] '<book> Chapter <num>'
 -m | --mp3	location of mp3 files ($opt{mp3})
+-s | --syllable	measure the words and syllables in the text
 -c | --check	check the chapter to file map
 -l | --lyric	generate .lrc lyric files instead, from:
 -t | --kjv	location of KJV text ($opt{kjv}), for -l
@@ -37,6 +38,7 @@ read|r=i a=s fast|f check|c))
 -a <-r file>	annotate reading schedule into listed files
 ";
 $opt{check} and $opt{lyric} = 1;
+$opt{syllable} and $opt{lyric} = 1;
 
 chdir $cache or die $!;
 my $who = -f '66_Revelation022.mp3' ? 'dw' # Dan Wagner
@@ -60,7 +62,7 @@ closedir DIR;
 
 if ($opt{lyric}) {		# generate lyric files for mythmusic!
 
-    &lyrics;
+    &lyrics($opt{syllable} ? $opt{kjv} : 'kjv.syb.tmp');
 
 } elsif ($opt{read}) {	  # generate time-based daily reading schedule
 
@@ -120,11 +122,15 @@ sub play {
 # to words, and finally to syllables.
 
 sub len {			# return the length of the text
-    my $len = 0;
+    my $syb = my $word = my $num = 0;
     for my $line (@_) {
+
+	my $len = 0;
 	$line =~ /^(\S+ \d+:\d+:)?\s*(.*)/; # ignore chapter/verse leader
 
 	(my $text = $2) =~ s/\s+\*\*.*//; # ignore reading schedule
+
+	my $words = split /\W+/, $text;
 
 	$text =~ s/([;:,])/ PAUSE /g; # punctuation pauses
 
@@ -141,17 +147,24 @@ sub len {			# return the length of the text
 	    $len += $one;
 	}
 	print "\n" if $opt{words};
+	print "$words\t$len\t$line";
+	$syb += $len;
+	$word += $words;
+	$num++;
     }
-    return $len;
+    print qq'$word\t$syb\t\t\t*** ($word words, ',
+	qq'$syb reading syllables in $num lines)\n';
+    return $syb;
 }
 
 sub lyrics {
+    my $file = shift;
     my @line;
-    open FILE, $opt{kjv} or die "$opt{kjv}: $!";
+    open FILE, '<:encoding(UTF-8)', $file or die "$file: $!";
     while (<FILE>) {
 	next if / mode: kjv /;	# skip header
 	s/\(KJV\)//;		# skip footer
-	if (/\{ (The Book of .+|.+ Chapter \d+) \}/) {
+	if (@line > 5 and /\{ (The Book of .+|.+ Chapter \d+) \}/) {
 	    &lyric(\@line);
 	    @line = ();
 	}
@@ -160,16 +173,27 @@ sub lyrics {
     &lyric(\@line);
 }
 
+# measure the words and syllables in the text
+sub measure {
+    my($lineref) = @_;
+    my $len = len(@$lineref);
+    return 1;
+}
+
 # See https://en.wikipedia.org/wiki/LRC_(file_format)
 sub lyric {
     my($lineref) = @_;
+    return measure($lineref) if $opt{syllable};
     my $head = (grep { /\{ .+ Chapter \d+ \}/ } @$lineref)[0] or return;
-    $head =~ /\{ (.+) Chapter (\d+) \}/ or return;
+    my $tail = (grep { /syllables/ } @$lineref)[0] or return;
+    my($words, $len) = split "\t", $tail or return;
+    $len or return;
     grep { $head =~ /$_/ } @ARGV or return 1
 	if @ARGV;
+    $head =~ /\{ (.+) Chapter (\d+) \}/ or return;
     my($book, $chap) = ($1, $2);
     my $file = file($book, $chap);
-    $file or print "no file in $head\n" and return;
+    $file or print "no file for $head\n" and return;
     (my $out = $file) =~ s/.mp3/.lrc/;
     $opt{check} and print "$book $chap -> $file\n" and return;
     $opt{fast} and -s $out and warn "-f skipping $out" and return;
@@ -179,16 +203,16 @@ sub lyric {
     defined $s or warn "unknown seconds in $file\n" and return;
     $duration = ($h || 0) * 3600 + ($m || 0) * 60 + $s;
     $duration -= 3;	       # seconds of silence on the end of file
-    my $len = len(@$lineref);
-    my $per = $duration / $len;	# seconds per word of text
+    my $per = $duration / $len;	# seconds per reading syllable of text
     my $t = 0;
-    open OUT, '>', ($opt{n} ? '/dev/null' : $out) or die $!;
+    open OUT, '>:encoding(UTF-8)', ($opt{n} ? '/dev/null' : $out) or die $!;
     for my $line (@$lineref) {
 	my $min = int($t / 60);
 	my $sec = $t - $min * 60;
+	$line =~ s/^(\d+)\t(\d+)\t// or next; # words, syllables
+	my $len = $2;			      # syllables
 	my $this = sprintf "[%02d:%05.02f]$line", $min, $sec;
 	print OUT $this;
-	my $len = len($line);
 	print "$len\t$this" if $opt{verbose};
 	$t += $len * $per;
     }
@@ -197,44 +221,35 @@ sub lyric {
     return 1;
 }
 
-sub readplan { # generate time-based reading schedule from lrc.log and  *.lrc
-    my $sec = 0;
-    my %sec;
-    my @file;
-    open FILE, 'lrc.log' or die $!; # output from -l, required
+sub readplan {		  # generate reading schedule from kjv.syb.tmp
+    my $syb = 0;	  # total syllables
+    my %syb;		  # {chapter} = syllables before this point
+    my $chap;
+    my $file = 'kjv.syb.tmp';
+    open FILE, $file or die "$file: $!";
     while (<FILE>) {
-	/(\d+) seconds .* in (.*.lrc)/ or next;
-	$sec += $1;
-	$sec{$2} = $1;
-	push @file, $2;
+	m/(\{ (\w.+\d) \})/ and $chap = $1;
+	m/^(\d+)\t(\d+)\t.*syllables.*in/ or next;
+	$syb += $2;		# aim for same syllable per day
+	$syb{$chap} = $syb;
     }
-    my %time;
-    my $time = my $this = my $last = 0;
-    for my $lrc (@file) {
-	open FILE, '<:encoding(UTF-8)', $lrc or die $!;
-	while (<FILE>) {
-	    chomp;
-	    /(\d{2}):(\d{2}.\d{2})/
-		and $this = $1 * 60 + $2;
-	    /(\{ .+ Chapter \d+ \})/ and $time{$1} = $time + $this;
-	}
-	$time += $sec{$lrc} || 0;
-    }
-    $time{'{ The End Chapter 0 }'} = $time;
-    $time = $last = 0;
+    $syb{'{ The End Chapter 0 }'} = $syb;
+    my $this = my $last = 0;
     my $date = timelocal(0, 0, 12, 1, 0, 3); # 1973 - 1975 no leap years
     my $days = $opt{read} > 30 ? $opt{read} : 365;
-    my $one = $sec / $days;
+    my $one = $syb / $days;	# syllable per day
     my $i = my $delta = my $max = 0;
     my $min = 999999;
-    for (my $time = $one; $time < $sec + $one / 2; $time += $one) {
+    for (my $time = $one; $time < $syb + $one / 2; $time += $one) {
 
-	my $goal = $last + $one; # daily reading goal, but:
-	$goal -= 0.3 * $delta;	 # move toward staying on-time
-	my $chap = (sort { abs($time{$a} - $goal) <=>
-			       abs($time{$b} - $goal) } keys %time)[0];
-	my $this = $time{$chap};
-	$delta = $this - $time;	# offset from perfect time
+	# daily reading goal, but move toward staying on-time via delta
+	my $goal = $last + $one;
+	$goal -= 0.1 * $delta;	# stddev: 383 = lowest I could find
+	# $goal = $time;	# stddev: 553 = closest to on-time
+	my $chap = (sort { abs($syb{$a} - $goal) <=>
+			       abs($syb{$b} - $goal) } keys %syb)[0];
+	my $this = $syb{$chap};
+	$delta = $this - $time;	 # offset from perfect time
 	my $len = $this - $last; # today's reading time
 	$max = $len if $len > $max;
 	$min = $len if $len < $min;
@@ -250,7 +265,8 @@ sub readplan { # generate time-based reading schedule from lrc.log and  *.lrc
 	$last = $this;
 	$date += 24 * 60 * 60;
     }
-    printf "(goal=%.0f seconds for $days days, %d-%d=%d, +/-=delta)\n",
+    printf "(goal=%.0f reading syllables for $days days, "
+	. "range %d-%d=%d, +/- delta)\n",
 	$one, $max, $min, $max - $min
 	if $opt{verbose};
 }
@@ -272,9 +288,9 @@ sub annotate { # use -r output to add reading schedule into given files
 	    $num{$d = $date{$1}}++;
 	}
     }
-    my %this;
     my $tmp = ".tmp$$";
     for my $file (@ARGV) {	# *.lrc or kjv.txt
+	my %this;
 	open FILE, $file or die $!;
 	open OUT, '>', $tmp or die $!;
 	while (<FILE>) {

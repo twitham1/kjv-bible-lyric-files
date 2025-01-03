@@ -41,7 +41,7 @@ sub clean { # strip markup but keep paragraphs, italics, quotes for plain text
     $l =~ s!<chapter.*?>!!g;
     $l =~ s!</?foreign.*?>!!g;
     $l =~ s!</?inscription>!!g;
-    $l =~ s!<div .*"book"/>!!;
+    $l =~ s!<div .*"book(Group)?"/>!!i;
     $l =~ s!(.+?:) +!$1 . (length($1) < 8 ? "\t\t" : "\t")!e; # chapter/verse
     $l =~ s!\s+$!!;
     $l = "\n$l" if $l =~ s!<milestone.*?"x-p"/>!!g; # paragraph

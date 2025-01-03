@@ -10,29 +10,32 @@ KJV=bin/kjv
 # KJV mp3 player and lyric file generator
 KJVMP3=bin/kjvmp3
 
-all: yearsum.txt
+# get the text, measure, plan reading, annotate, build lyrics
+all: lrc.log
 
 # format whole KJV from Sword
-kjv.txt:
-	${KJV} gen 1-2000 > kjv.txt
+kjv.tmp:
+	${KJV} gen 1-2000 > kjv.tmp
 
-# generate lyrics for all *.mp3, full output is needed for reading plan
-lrc.log: kjv.txt
-	${KJVMP3} -l | tee lrc.log
+# measure words and syllables of the text
+kjv.syb.tmp: kjv.tmp
+	${KJVMP3} -s -t kjv.tmp > kjv.syb.tmp
 
 # generate yearly reading plan
-yearplan.txt: lrc.log
+yearplan.txt: kjv.syb.tmp
 	${KJVMP3} -r 365 > yearplan.txt
 	${KJVMP3} -r 365 -v > yearstat.txt
 
-# annotate reading plan into *.lrc and summarize
+# annotate reading plan into kjv.txt and summarize
 yearsum.txt: yearplan.txt
-	cp kjv.txt kjvplan.txt && \
-	${KJVMP3} -a yearplan.txt kjvplan.txt *.lrc \
-	&& grep ' 1/' kjvplan.txt | perl -pe 's/.*\{/\{/; s/Chapter //' > yearsum.txt
+	cp kjv.tmp kjv.txt
+	cp kjv.syb.tmp kjv.syb.txt
+	${KJVMP3} -a yearplan.txt kjv.txt kjv.syb.txt
+	grep ' 1/' kjv.txt | perl -pe 's/.*\{/\{/; s/Chapter //' > yearsum.txt
 
-	# && cp kjv.txt kjv-read.txt \
-	# && ${KJVMP3} -a yearplan.txt kjv-read.txt \
-	# && touch -r kjv.txt kjv-read.txt \
-	# && mv kjv-read.txt kjv.txt \
-	# && grep ' 1/' kjv.txt | perl -pe 's/.*\{/\{/; s/Chapter //' > yearsum.txt
+# generate lyrics for all *.mp3
+lrc.log: yearsum.txt
+	${KJVMP3} -l | tee lrc.log
+
+clean:
+	rm kjv*.tmp kjv*.txt year*.txt *.lrc lrc.log
