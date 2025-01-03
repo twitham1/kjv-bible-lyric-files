@@ -52,6 +52,13 @@ SOURCE:	https://www.audiotreasure.com/indexKJV.htm
 AS/OF:	2022
 NOTE:	soft music, faster
 
+DIR:	emacs/
+ARTIST:	Timothy D Witham
+YEAR:	2005
+SOURCE:	./site-lisp/kjv-mode.el ./bin/kjvmp3
+AS/OF:	2025
+NOTE:	No .lrc at all but rather a scripture reader for Emacs
+
 
 # EMACS
 
@@ -61,9 +68,13 @@ load-path and add something like this to ~/.emacs
    (autoload 'kjv-mode "kjv-mode" nil t)
 
 Now find-file on DIR/kjv.txt should invoke kjv-mode for reading the
-bible in emacs.  See C-h m for mode documentation.
+Bible in emacs.  See C-h m for mode documentation.
 
-copy bin/kjvmp3 to your $PATH for audio playback in emacs
+symlink the directory of your *.mp3 to ~/.kjv, something like:
+
+	ln -s /usr/local/share/doc/KJV/AS ~/.kjv
+
+then copy bin/kjvmp3 to your $PATH for audio playback in emacs
 
 
 # HOW TO [RE]GENERATE .lrc files for .mp3 files

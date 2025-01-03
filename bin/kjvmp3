@@ -2,12 +2,10 @@
 
 # KVJ audio player for emacs kjv-mode, by twitham@sbcglobal.net
 
-# Can also now generate .lrc lyric files for audio players!
+# Can also now generate reading plans and .lrc lyric files!
 
-# # Downloaded from https://www.audiotreasure.com/indexKJV.htm in 2022:
-# (my $path = $0) =~ s{/[^/]+$}{};
-# my $cache = "$path/../KJV";
-my $cache = '.';
+# symlink this to the path of your 1189 *.mp3 bible chapters
+my $cache = "$ENV{HOME}/.kjv";
 
 # converted from Sword by ./kjv gen 1-2000 > kjv.txt in 2024:
 my $kjv = 'kjv.txt';
@@ -25,22 +23,25 @@ my %opt = (mp3 => $cache, kjv => $kjv); # defaults
 GetOptions(\%opt, qw(mp3|m=s lyric|l kjv|t=s verbose|v words|w n|dry
 read|r=i a=s fast|f check|c syllable|s))
     or die "usage: $0 [options] '<book> Chapter <num>'
--m | --mp3	location of mp3 files ($opt{mp3})
--s | --syllable	measure the words and syllables in the text
+-m | --mp3	location of mp3 files (. || $opt{mp3})
 -c | --check	check the chapter to file map
--l | --lyric	generate .lrc lyric files instead, from:
+-s | --syllable	measure the words and syllables in the text
+-r | --read = N	generate daily reading schedule for N days
+-a <-r file>	annotate reading schedule into listed files
+-l | --lyric	generate .lrc lyric files, from:
 -t | --kjv	location of KJV text ($opt{kjv}), for -l
 -f | --fast	skip existing .lrc files
 -v | --verbose	show syllables per line with -l, reading stats with -r
 -w | --words	show syllables per word with -l
--n | --dry	don't write .lrc with -l, useful with -v -s
--r | --read = N	generate daily reading schedule for N days
--a <-r file>	annotate reading schedule into listed files
+-n | --dry	don't write .lrc with -l, useful with -v
 ";
 $opt{check} and $opt{lyric} = 1;
 $opt{syllable} and $opt{lyric} = 1;
 
-chdir $cache or die $!;
+grep / Chapter /, @ARGV
+    and (chdir $cache
+	 or die "please symlink dir of *.mp3 to $cache: $!");
+
 my $who = -f '66_Revelation022.mp3' ? 'dw' # Dan Wagner
     : -f '66_Revelation_22.mp3' ? 'sj'	   # Stephen Johnston
     : -f 'Revelations 22.mp3' ? 'as'	   # Alexander Scourby
