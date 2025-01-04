@@ -1,45 +1,39 @@
-# Create KJV lyric files for KJV mp3 files
+# Create a 75 column wide UTF-8 KJV Bible text file for reading with a
+# text editor like Emacs (see site-lisp/kjv-mode.el).  Include
+# paragraphs, [italics] and "words of Christ".  Then measure the
+# "reading syllables" of the text to generate a yearly reading plan to
+# add to the chapter headers.
 
 # by Timothy D Witham <twitham@sbcglobal.net>
 
-# must be run from a subdir/ holding 1189 .mp3 files:
-
-# cd ARTIST/ && cp ../AS/Makefile Makefile && make
-
-# which artist am I based on directory name
-WHO:=$(shell pwd | perl -pe 's{.*/}{}')
+# KJV shell for Sword, by twitham
+KJV=bin/kjv
 
 # KJV mp3 player and lyric file generator, by twitham
-KJVMP3=../bin/kjvmp3
+KJVMP3=bin/kjvmp3
 
-all: lrc.log
+# get the text, measure, plan reading, annotate
+all: yearsum.txt
 
-# check that all chapters resolve to a .mp3 file here
-kjv-mp3-map.txt: ../kjv.txt
-	${KJVMP3} -c -f ../kjv.txt > kjv-mp3-map.txt
+# format whole KJV from Sword
+kjv.tmp:
+	${KJV} gen 1-2000 > kjv.tmp
 
-# generate *.lrc lyrics for all *.mp3
-lrc.log: ../yearsum.txt kjv-mp3-map.txt
-	${KJVMP3} -l -f ../kjv-syb.txt | tee lrc.log
+# measure words and syllables of the text
+kjv-syb.tmp: kjv.tmp
+	${KJVMP3} -s -f kjv.tmp > kjv-syb.tmp
 
-# make a distribution for this set of audio files
-dist: lrc.log
-	cd .. && \
-	egrep -A6 '^DIR:	${WHO}' README.md > ${WHO}/README && \
-	cat ./${WHO}/README > README && \
-	cat README.md >> README && \
-	cd .. && \
-	tar zcvf KJV-${WHO}.tgz \
-	KJV/README \
-	KJV/Makefile \
-	KJV/*.txt \
-	KJV/${WHO}/README \
-	KJV/${WHO}/Makefile \
-	KJV/${WHO}/*.txt \
-	KJV/${WHO}/*.log \
-	KJV/${WHO}/*.lrc \
-	KJV/site-lisp \
-	KJV/bin
+# generate yearly reading plan
+yearplan.txt: kjv-syb.tmp
+	${KJVMP3} -r 365 -f kjv-syb.tmp    > yearplan.txt
+	${KJVMP3} -r 365 -f kjv-syb.tmp -v > yearstat.txt
+
+# annotate reading plan into kjv.txt and summarize
+yearsum.txt: yearplan.txt
+	cp kjv.tmp kjv.txt
+	cp kjv-syb.tmp kjv-syb.txt
+	${KJVMP3} -a -f yearplan.txt kjv.txt kjv-syb.txt
+	grep ' 1/' kjv.txt | perl -pe 's/.*\{/\{/; s/Chapter //' > yearsum.txt
 
 clean:
-	rm kjv-mp3-map.txt lrc.log *.lrc
+	rm kjv*.tmp kjv*.txt year*.txt
