@@ -7,9 +7,6 @@
 # symlink this to the path of your 1189 *.mp3 bible chapters
 my $cache = "$ENV{HOME}/.kjv";
 
-# converted from Sword by ./kjv gen 1-2000 > kjv.txt in 2024:
-my $kjv = 'kjv.txt';
-
 use warnings;
 use strict;
 use Getopt::Long;
@@ -18,19 +15,18 @@ use Time::Local;
 use POSIX qw(strftime);
 use File::Basename;
 
-my %opt = (mp3 => $cache, kjv => $kjv); # defaults
+my %opt = (mp3 => $cache);	# defaults
 
 GetOptions(\%opt, qw(mp3|m=s lyric|l kjv|t=s verbose|v words|w n|dry
-read|r=i a=s fast|f check|c syllable|s))
-    or die "usage: $0 [options] '<book> Chapter <num>'
+read|r=i annotate|a file|f=s check|c syllable|s))
+    or die "usage: $0 [options] | '<book> Chapter <num>'
 -m | --mp3	location of mp3 files (. || $opt{mp3})
+-f | --file <file>	read the input from file, required for filters:
 -c | --check	check the chapter to file map
--s | --syllable	measure the words and syllables in the text
+-s | --syllable measure the words and syllables in the text
 -r | --read = N	generate daily reading schedule for N days
--a <-r file>	annotate reading schedule into listed files
--l | --lyric	generate .lrc lyric files, from:
--t | --kjv	location of KJV text ($opt{kjv}), for -l
--f | --fast	skip existing .lrc files
+-a | annotate	annotate reading schedule into listed files
+-l | --lyric	generate 1189 .lrc lyric files
 -v | --verbose	show syllables per line with -l, reading stats with -r
 -w | --words	show syllables per word with -l
 -n | --dry	don't write .lrc with -l, useful with -v
@@ -38,14 +34,19 @@ read|r=i a=s fast|f check|c syllable|s))
 $opt{check} and $opt{lyric} = 1;
 $opt{syllable} and $opt{lyric} = 1;
 
-grep / Chapter /, @ARGV
-    and (chdir $cache
-	 or die "please symlink dir of *.mp3 to $cache: $!");
+if (grep / Chapter /, @ARGV) {
+    chdir $cache or
+	die "please symlink dir of *.mp3 to $cache: $!";
+} else {
+    $opt{file} and -f $opt{file} and -s $opt{file} or
+	die "-f input file required, see Makefile\n";
+}
 
+# hack!!! file naming convention indicates artist
 my $who = -f '66_Revelation022.mp3' ? 'dw' # Dan Wagner
     : -f '66_Revelation_22.mp3' ? 'sj'	   # Stephen Johnston
     : -f 'Revelations 22.mp3' ? 'as'	   # Alexander Scourby
-    : '??';			# hack!!! file format indicates artist
+    : '??';
 
 # Fix Pss 145 by ending time before the included Pss 146:1-8
 # Fix Nah 3 by ending time after the missing Nah 3:17-19
@@ -63,13 +64,13 @@ closedir DIR;
 
 if ($opt{lyric}) {		# generate lyric files for mythmusic!
 
-    &lyrics($opt{syllable} ? $opt{kjv} : 'kjv.syb.tmp');
+    &lyrics;
 
 } elsif ($opt{read}) {	  # generate time-based daily reading schedule
 
     &readplan;
 
-} elsif ($opt{a}) {		# add reading schedule to each file
+} elsif ($opt{annotate}) {	# add reading schedule to each file
 
     &annotate;
 
@@ -159,9 +160,8 @@ sub len {			# return the length of the text
 }
 
 sub lyrics {
-    my $file = shift;
     my @line;
-    open FILE, '<:encoding(UTF-8)', $file or die "$file: $!";
+    open FILE, '<:encoding(UTF-8)', $opt{file} or die "$opt{file}: $!";
     while (<FILE>) {
 	next if / mode: kjv /;	# skip header
 	s/\(KJV\)//;		# skip footer
@@ -184,20 +184,21 @@ sub measure {
 # See https://en.wikipedia.org/wiki/LRC_(file_format)
 sub lyric {
     my($lineref) = @_;
-    return measure($lineref) if $opt{syllable};
+    return measure($lineref)
+	if $opt{syllable};
     my $head = (grep { /\{ .+ Chapter \d+ \}/ } @$lineref)[0] or return;
-    my $tail = (grep { /syllables/ } @$lineref)[0] or return;
-    my($words, $len) = split "\t", $tail or return;
-    $len or return;
-    grep { $head =~ /$_/ } @ARGV or return 1
-	if @ARGV;
     $head =~ /\{ (.+) Chapter (\d+) \}/ or return;
     my($book, $chap) = ($1, $2);
     my $file = file($book, $chap);
     $file or print "no file for $head\n" and return;
     (my $out = $file) =~ s/.mp3/.lrc/;
     $opt{check} and print "$book $chap -> $file\n" and return;
-    $opt{fast} and -s $out and warn "-f skipping $out" and return;
+
+    # input file must be pre measured by now
+    my $tail = (grep { /syllables/ } @$lineref)[0] or return;
+    my($words, $len) = split "\t", $tail or return;
+    $len or return;
+
     my $duration = $fixlen{"$book $chap"} || `exiftool -duration '$file'`;
     my($h, $m, $s) = ($duration =~ /: (\d+):(\d+):(\d+)/);
     defined $s or ($h, $m, $s) = ($duration =~ /: ()()(\d+\.\d+) s/);
@@ -226,8 +227,7 @@ sub readplan {		  # generate reading schedule from kjv.syb.tmp
     my $syb = 0;	  # total syllables
     my %syb;		  # {chapter} = syllables before this point
     my $chap;
-    my $file = 'kjv.syb.tmp';
-    open FILE, $file or die "$file: $!";
+    open FILE, $opt{file} or die "$opt{file}: $!";
     while (<FILE>) {
 	m/(\{ (\w.+\d) \})/ and $chap = $1;
 	m/^(\d+)\t(\d+)\t.*syllables.*in/ or next;
@@ -273,24 +273,24 @@ sub readplan {		  # generate reading schedule from kjv.syb.tmp
 }
 
 sub annotate { # use -r output to add reading schedule into given files
-    open FILE, $opt{a} or die $!;
+    open FILE, $opt{file} or die "$opt{file}: $!";
     my $last = '{ Genesis Chapter 1 }';
     my %date;
-    while (<FILE>) {
+    while (<FILE>) {		# -r reading plan
 	/\s*(\w+\s+\d+)\s+(\{ .* Chapter \d+ \})/ or next;
 	$date{$last} = $1;
 	$last = $2;
     }
     my $d; my %num;
-    open FILE, $opt{kjv} or die "$opt{kjv}: $!";
-    while (<FILE>) {		# chapters per day
+    open FILE, $ARGV[0] or die "$ARGV[0]: $!";
+    while (<FILE>) {		# kjv.txt
 	if (/(\{ .* Chapter \d+ \})/) {
 	    $date{$1} =  $date{$1} || $d;
 	    $num{$d = $date{$1}}++;
 	}
     }
     my $tmp = ".tmp$$";
-    for my $file (@ARGV) {	# *.lrc or kjv.txt
+    for my $file (@ARGV) {	# kjv.txt [ kjv.syb.txt *.lrc ]
 	my %this;
 	open FILE, $file or die $!;
 	open OUT, '>', $tmp or die $!;

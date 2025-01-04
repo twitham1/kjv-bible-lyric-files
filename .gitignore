@@ -5,3 +5,5 @@
 *.tgz
 *~
 lrc.log
+DW/Makefile
+SJ/Makefile
