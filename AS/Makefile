@@ -31,15 +31,16 @@ dist: lrc.log
 	cd .. && \
 	tar zcvf KJV-${WHO}.tgz \
 	KJV/README \
+	KJV/COPYING \
 	KJV/Makefile \
 	KJV/*.txt \
+	KJV/site-lisp \
+	KJV/bin \
 	KJV/${WHO}/README \
 	KJV/${WHO}/Makefile \
 	KJV/${WHO}/*.txt \
 	KJV/${WHO}/*.log \
-	KJV/${WHO}/*.lrc \
-	KJV/site-lisp \
-	KJV/bin
+	KJV/${WHO}/*.lrc
 
 clean:
 	rm kjv-mp3-map.txt lrc.log *.lrc

@@ -14,12 +14,13 @@ dist:
 	cd .. && \
 	tar zcvf KJV-${WHO}.tgz \
 	KJV/README \
+	KJV/COPYING \
 	KJV/Makefile \
 	KJV/*.txt \
-	KJV/${WHO}/README \
-	KJV/${WHO}/Makefile \
 	KJV/site-lisp \
-	KJV/bin
+	KJV/bin \
+	KJV/${WHO}/README \
+	KJV/${WHO}/Makefile
 
 clean:
 	rm kjv-mp3-map.txt lrc.log *.lrc

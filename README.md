@@ -1,5 +1,7 @@
 # kjv-bible-lyric-files
 
+SOURCE:	https://github.com/twitham1/kjv-bible-lyric-files
+
 This code generates LRC text files to sit alongside KJV audio files
 for scripture display while corresponding sound plays in your favorite
 player.  I use MythMusic of MythTV.  Other options might be found at
@@ -139,14 +141,11 @@ than their track number while Proverbs are 60 less.
 Timothy D Witham <twitham@sbcglobal.net>
 
 
-# COPYRIGHT
+# COPYRIGHT / LICENSE
 
-My code is Copyright 2005 - 2025 under the GPL
+My code is Copyright 2005-2025 under the GPLv3, see COPYING
 
-
-# LICENSE
-
-The KJV text is module version 3.1 from SWORD which states:
+The KJV text is module version 3.1 for SWORD which states:
 
 It is in this spirit that we in turn offer the KJV2003 Project text
 freely for any purpose.  Any copyright that might be obtained for this
