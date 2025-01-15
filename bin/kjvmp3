@@ -14,6 +14,7 @@ use Lingua::EN::Syllable;
 use Time::Local;
 use POSIX qw(strftime);
 use File::Basename;
+use Statistics::Descriptive;
 
 my %opt = (mp3 => $cache);	# defaults
 
@@ -132,6 +133,7 @@ sub len {			# return the length of the text
 
 	(my $text = $2) =~ s/\s+\*\*.*//; # ignore reading schedule
 
+	$text =~ s/^\W+//;
 	my $words = split /\W+/, $text;
 
 	$text =~ s/([;:,])/ PAUSE /g; # punctuation pauses
@@ -223,53 +225,99 @@ sub lyric {
     return 1;
 }
 
-sub readplan {		  # generate reading schedule from kjv.syb.tmp
+{
     my $syb = 0;	  # total syllables
     my %syb;		  # {chapter} = syllables before this point
+sub readplan {		  # generate reading schedule from kjv-syb.tmp
     my $chap;
     open FILE, $opt{file} or die "$opt{file}: $!";
-    while (<FILE>) {
+    while (<FILE>) {		# words syllables text
 	m/(\{ (\w.+\d) \})/ and $chap = $1;
 	m/^(\d+)\t(\d+)\t.*syllables.*in/ or next;
-	$syb += $2;		# aim for same syllable per day
-	$syb{$chap} = $syb;
+	$syb += $2;		# running total
+	$syb{$chap} = $syb;	# syllables to this chapter
     }
     $syb{'{ The End Chapter 0 }'} = $syb;
+
+    my $file = "$opt{file}.txt"; # best factor cache
+    my %frac;
+    if (open FILE, $file) {
+	while (<FILE>) {
+	    my($days, $rest) = split "\t", $_, 2;
+	    $frac{$days} = $rest if $days =~ /\d+/;
+	}
+    }
+    my $good = 0;		# best multiplier of minimum stddev
+    if (my $tmp = $frac{$opt{read}}) {
+	$tmp =~ /^(\S+)/ and $good = $1;
+
+    } else {		 # find goal factor that yields minimum stddev
+	my $min = 99999;
+	open FILE, '>', $file or die "can't write $file: $!";
+	print "finding chapter breaks of minimum stddev for $opt{read} days\n";
+	for (my $try = 0; $try < 0.25; $try += 0.01) {
+	    my $stddev = &tryplan($try, 1);
+	    my $found = '';
+	    $min = $stddev and $good = $try and $found = "\t<<<<<"
+		if $stddev < $min;
+	    print "$try\t$stddev$found\n";
+	}
+	my $zero = &tryplan(0, 1); # aim for mean syllables only
+	my $one = &tryplan(1, 1);  # aim for nearest break only
+	$frac{$opt{read}} = join("\t", $good, int($syb / $opt{read} + 0.5),
+				 $min, $zero, $one) . "\n";
+	print FILE join("\t", qw/days factor mean stddev 0 1/),
+	    "\t($syb syllables)\n";
+	for (sort {$a <=> $b} keys %frac) {
+	    print FILE "$_\t$frac{$_}";
+	}
+	close FILE or die $!;
+    }
+    &tryplan($good);
+}
+sub tryplan {
+    my($frac, $preview) = @_;
     my $this = my $last = 0;
     my $date = timelocal(0, 0, 12, 1, 0, 3); # 1973 - 1975 no leap years
-    my $days = $opt{read} > 30 ? $opt{read} : 365;
+    my $days = $opt{read} ? $opt{read} : 365;
     my $one = $syb / $days;	# syllable per day
     my $i = my $delta = my $max = 0;
     my $min = 999999;
+    my $stat = Statistics::Descriptive::Full->new();
     for (my $time = $one; $time < $syb + $one / 2; $time += $one) {
 
 	# daily reading goal, but move toward staying on-time via delta
 	my $goal = $last + $one;
-	$goal -= 0.1 * $delta;	# stddev: 383 = lowest I could find
-	# $goal = $time;	# stddev: 553 = closest to on-time
+	$goal -= $frac * $delta;
 	my $chap = (sort { abs($syb{$a} - $goal) <=>
 			       abs($syb{$b} - $goal) } keys %syb)[0];
 	my $this = $syb{$chap};
 	$delta = $this - $time;	 # offset from perfect time
 	my $len = $this - $last; # today's reading time
+	$last = $this;
 	$max = $len if $len > $max;
 	$min = $len if $len < $min;
 
-	$i++;
 	my $ts = strftime "%10B %e", localtime $date;
-	if ($opt{verbose}) {
+	if ($preview) {
+	    $stat->add_data($len);
+	} elsif ($opt{verbose}) {
+	    $i++;
 	    printf "%d\t%3d/%3d\t%s\t%d\t%s\n", $len, $i, $days,
 		$ts, $delta, $chap;
 	} else {
 	    printf "%s\t%s\n", $ts, $chap;
 	}
-	$last = $this;
 	$date += 24 * 60 * 60;
+    }
+    if ($preview) {
+	return $stat->standard_deviation() || 0;
     }
     printf "(goal=%.0f reading syllables for $days days, "
 	. "range %d-%d=%d, +/- delta)\n",
 	$one, $max, $min, $max - $min
 	if $opt{verbose};
+}
 }
 
 sub annotate { # use -r output to add reading schedule into given files
