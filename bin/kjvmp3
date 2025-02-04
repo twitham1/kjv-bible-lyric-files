@@ -161,9 +161,19 @@ sub len {			# return the length of the text
     return $syb;
 }
 
+my %next;			# {chapter} = next chapter
 sub lyrics {
     my @line;
     open FILE, '<:encoding(UTF-8)', $opt{file} or die "$opt{file}: $!";
+    my $last = '';
+    while (<FILE>) {		# AS needs to find book ends
+	if (/\{ (.+ Chapter \d+) \}/) {
+	    $next{$last} = $1;
+	    $last = $1;
+	}
+    }
+    $next{$last} = 'The End';
+    seek FILE, 0, 0;		# start over
     while (<FILE>) {
 	next if / mode: kjv /;	# skip header
 	s/\(KJV\)//;		# skip footer
@@ -206,7 +216,12 @@ sub lyric {
     defined $s or ($h, $m, $s) = ($duration =~ /: ()()(\d+\.\d+) s/);
     defined $s or warn "unknown seconds in $file\n" and return;
     $duration = ($h || 0) * 3600 + ($m || 0) * 60 + $s;
-    $duration -= 3;	       # seconds of silence on the end of file
+    if ($who eq 'as') {	# book closing statement runs longer past the text
+	$duration -=
+	    $next{"$book Chapter $chap"} =~ /^$book / ? 1 : 7;
+    } else {
+	$duration -= 3;	       # seconds of silence on the end of file
+    }
     my $per = $duration / $len;	# seconds per reading syllable of text
     my $t = 0;
     open OUT, '>:encoding(UTF-8)', ($opt{n} ? '/dev/null' : $out) or die $!;
