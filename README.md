@@ -2,20 +2,22 @@
 
 SOURCE:	https://github.com/twitham1/kjv-bible-lyric-files
 
+The King James Holy Bible in 1189 Lyric format files (*.lrc)
+
 This code generates LRC text files to sit alongside KJV audio files
 for scripture display while corresponding sound plays in your favorite
-player.  I use MythMusic of MythTV.  Other options might be found at
+player.  I use MythMusic of MythTV.  Other options might be found at:
 
 https://en.wikipedia.org/wiki/LRC_(file_format)#Support
 
-Grab a release from github to get a full set of .lrc files for your
-.mp3 files, see INSTALL options below.
+Grab a release file from github to get a full set of .lrc files for
+your .mp3 files, see INSTALL options below.
 
 These .lrc files distribute the time of the audio recording across the
-"reading syllables" of the text.  This works well most of the time
-with a display within a line or two of the sound.  The sound and text
-occasionally drift by as many as 4 lines.  My player shows +/- 5 lines
-of lyrics so that the text is always visible.  YMMV.
+"reading syllables" of the text.  This yields a display within a line
+or two of the sound most of the time.  The sound and text occasionally
+drift by up to 5 lines so displaying 11 or more lines of context is
+recommended.
 
 "Reading syllables" are the syllables of the words plus:
 
@@ -30,8 +32,8 @@ This yields a better timing than bytes, words or lines.
 # INSTALLATION
 
 Simply copy the DIR/*.lrc files to the location of matching *.mp3
-files.  Or, copy those matchng *.mp3 to the given DIR here.  AS/OF the
-given dates, these options worked for me.
+files.  Or, copy those matching *.mp3 to the given DIR here.  AS/OF
+the given dates, these options worked for me.
 
 DIR:	AS/
 ARTIST:	Alexander Scourby
@@ -49,7 +51,7 @@ NOTE:	voice only, slower
 
 DIR:	SJ/
 ARTIST:	Stephen Johnston
-YEAR:	1953
+YEAR:	1999
 SOURCE:	https://www.audiotreasure.com/indexKJV.htm
 AS/OF:	2022
 NOTE:	soft music, faster
@@ -79,36 +81,6 @@ symlink the directory of your *.mp3 to ~/.kjv, something like:
 then copy bin/kjvmp3 to your $PATH for audio playback in emacs.
 
 
-# HOW TO [RE]GENERATE .lrc files for .mp3 files
-
-These .lrc files were generated from the source AS/OF dates above.  If
-the source audio changes, or to apply to different audio, the code can
-be re-run against new .mp3 content.  This will require:
-
-* the SWORD project and its diatheke command
-* perl to run my code in bin/
-* exiftool to measure .mp3 audio length
-* make to fully automate the process from my Makefile
-
-See Makefile to see the details of how the files are generated:
-
-1. bin/kjv generates kjv.txt from https://crosswire.org/ 's SWORD
-project, converting to a 75 column UTF-8 text format that still
-includes italics, paragraphs and Words of Christ in quotes.
-
-2. bin/kjvmp3 -s is used to measure words and syllables of each line
-and chapter, see kjv-syb.txt
-
-3. bin/kjvmp3 -r is used to generate a 365 day reading schedule aiming
-for similar syllables per day while breaking between chapters, see
-yearstat.txt.
-
-4. bin/kjvmp3 -a is used to annotate the reading schedule into the
-chapter headers, see kjv-syb.txt
-
-5. bin/kjvmp3 -l is used to generate a .lrc file per .mp3, 1189 total
-
-
 # Thoughts on .mp3 Bible Chapter METADATA
 
 How do you keep track of 1189 chapters in your audio player?  DW and
@@ -132,8 +104,38 @@ Discs and split them in half as follows:
 * Proverbs 1-31 stay on Disc 20 but move to Track 61-91
 
 This way everything is in order and in 66 Discs matching 66 books,
-with the above exceptions in only 2 books.  Disc 20 Psalms are 90 more
-than their track number while Proverbs are 60 less.
+with the above exceptions in only 2 books.  Psalms chapters on Disc 20
+are 90 more than their track number while Proverbs are 60 less.
+
+
+# HOW TO [RE]GENERATE .lrc files for .mp3 files
+
+These .lrc files were generated from the source AS/OF dates above.  If
+the source audio changes, or to apply to different audio, the code can
+be re-run against new .mp3 content.  This will require:
+
+* the SWORD project and its diatheke command
+* perl to run my code in bin/
+* exiftool to measure .mp3 audio length
+* make to fully automate the process from my Makefile
+
+See Makefile to see the details of how the files are generated:
+
+1. bin/kjv generates kjv.txt from https://crosswire.org/ 's SWORD
+project, converting to a 75 column UTF-8 text format that still
+includes [italics], paragraphs and "Words of Christ".
+
+2. bin/kjvmp3 -s is used to measure words and syllables of each line
+and chapter, see kjv-syb.txt
+
+3. bin/kjvmp3 -r is used to generate a 365 day reading schedule aiming
+for similar syllables per day while breaking only between chapters,
+see yearstat.txt.
+
+4. bin/kjvmp3 -a is used to annotate the reading schedule into the
+chapter headers, see kjv.txt
+
+5. bin/kjvmp3 -l is used to generate a .lrc file per .mp3, 1189 total
 
 
 # AUTHOR
