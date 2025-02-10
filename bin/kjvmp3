@@ -243,14 +243,16 @@ sub lyric {
 {
     my $syb = 0;	  # total syllables
     my %syb;		  # {chapter} = syllables before this point
+    my @chap;
 sub readplan {		  # generate reading schedule from kjv-syb.tmp
     my $chap;
     open FILE, $opt{file} or die "$opt{file}: $!";
     while (<FILE>) {		# words syllables text
 	m/(\{ (\w.+\d) \})/ and $chap = $1;
 	m/^(\d+)\t(\d+)\t.*syllables.*in/ or next;
+	push @chap, $2;
 	$syb += $2;		# running total
-	$syb{$chap} = $syb;	# syllables to this chapter
+	$syb{$chap} = $syb;	# syllables to this chapter end
     }
     $syb{'{ The End Chapter 0 }'} = $syb;
 
@@ -316,12 +318,15 @@ sub tryplan {
 	my $ts = strftime "%10B %e", localtime $date;
 	if ($preview) {
 	    $stat->add_data($len);
-	} elsif ($opt{verbose}) {
-	    $i++;
-	    printf "%d\t%3d/%3d\t%s\t%d\t%s\n", $len, $i, $days,
-		$ts, $delta, $chap;
 	} else {
-	    printf "%s\t%s\n", $ts, $chap;
+	    my $num;
+	    my @me;
+	    do {
+		push @me, shift @chap;
+		$num = 0;
+		map { $num += $_ } @me;
+	    } while ($num < $len);
+	    printf "%d\t%s\t%d\t%s\t@me\n", $len, $ts, $delta, $chap;
 	}
 	$date += 24 * 60 * 60;
     }
@@ -337,34 +342,34 @@ sub tryplan {
 
 sub annotate { # use -r output to add reading schedule into given files
     open FILE, $opt{file} or die "$opt{file}: $!";
-    my $last = '{ Genesis Chapter 1 }';
-    my %date;
+    my @chap;
     while (<FILE>) {		# -r reading plan
-	/\s*(\w+\s+\d+)\s+(\{ .* Chapter \d+ \})/ or next;
-	$date{$last} = $1;
-	$last = $2;
-    }
-    my $d; my %num;
-    open FILE, $ARGV[0] or die "$ARGV[0]: $!";
-    while (<FILE>) {		# kjv.txt
-	if (/(\{ .* Chapter \d+ \})/) {
-	    $date{$1} =  $date{$1} || $d;
-	    $num{$d = $date{$1}}++;
-	}
+	/ Chapter \d+ \}\t(.+)$/ or next;
+	push @chap, [ split ' ', $1 ];
+
     }
     my $tmp = ".tmp$$";
-    for my $file (@ARGV) {	# kjv.txt [ kjv.syb.txt *.lrc ]
-	my %this;
+    for my $file (@ARGV) {	# kjv.txt [ kjv.syb.txt ]
+	my $date = timelocal(0, 0, 12, 1, 0, 3); # 1973 - 1975 no leap years
 	open FILE, $file or die $!;
 	open OUT, '>', $tmp or die $!;
+	my $day = 0;		# day index
+	my $num = 0;		# numerator
 	while (<FILE>) {
-	    if (s/(\{ .* Chapter \d+ \}).*/$1/ and my $d = $date{$1}) {
+	    if (s/(\{ .* Chapter \d+ \}).*/$1/) {
 		my $n = 40 - length($1);
 		my $s = " " x ($n % 8);
 		$s .= "\t" x ($n / 8);
-		++$this{$d};
+		my $ts = strftime "%B %e", localtime $date;
+		my $chaps = @{$chap[$day]};
+		$num++;
 		s{(\{ .* Chapter \d+ \}).*}
-		{$1$s** $date{$1} $this{$d}/$num{$d} **};
+		{$1$s** $ts $num/$chaps **};
+		if ($num >= $chaps) {
+		    $day++;
+		    $num = 0;
+		    $date += 24 * 60 * 60;
+		}
 	    }
 	    print OUT;
 	}

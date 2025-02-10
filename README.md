@@ -130,7 +130,7 @@ and chapter, see kjv-syb.txt
 
 3. bin/kjvmp3 -r is used to generate a 365 day reading schedule aiming
 for similar syllables per day while breaking only between chapters,
-see yearstat.txt.
+see yearplan.txt.
 
 4. bin/kjvmp3 -a is used to annotate the reading schedule into the
 chapter headers, see kjv.txt

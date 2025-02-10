@@ -25,15 +25,14 @@ kjv-syb.tmp: kjv.tmp
 
 # generate yearly reading plan
 yearplan.txt: kjv-syb.tmp
-	${KJVMP3} -r 365 -f kjv-syb.tmp    > yearplan.txt
-	${KJVMP3} -r 365 -f kjv-syb.tmp -v > yearstat.txt
+	${KJVMP3} -r 365 -f kjv-syb.tmp > yearplan.txt
 
 # annotate reading plan into kjv.txt and summarize
 yearsum.txt: yearplan.txt
 	cp kjv.tmp kjv.txt
 	cp kjv-syb.tmp kjv-syb.txt
 	${KJVMP3} -a -f yearplan.txt kjv.txt kjv-syb.txt
-	grep ' 1/' kjv.txt | perl -pe 's/.*\{/\{/; s/Chapter //' > yearsum.txt
+	grep ' 1/' kjv.txt | perl -pe 's/.*\{ (.+) Chapter (\d+).*\*\* (.+)\s+(\S+) \*\*/sprintf "%-13s %3s  %s %s", $3, $4, $1, $2/e' > yearsum.txt
 
 clean:
 	rm kjv*.tmp kjv*.txt year*.txt
