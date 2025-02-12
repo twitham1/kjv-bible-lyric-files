@@ -19,7 +19,7 @@ kjv-mp3-map.txt: ../kjv.txt
 	${KJVMP3} -c -f ../kjv.txt > kjv-mp3-map.txt
 
 # generate *.lrc lyrics for all *.mp3
-lrc.log: ../yearsum.txt kjv-mp3-map.txt
+lrc.log: ../kjv-syb.txt kjv-mp3-map.txt
 	${KJVMP3} -l -f ../kjv-syb.txt | tee lrc.log
 
 # make a distribution for this set of audio files
@@ -34,6 +34,7 @@ dist: lrc.log
 	KJV/COPYING \
 	KJV/Makefile \
 	KJV/*.txt \
+	KJV/bookmarks.ps \
 	KJV/site-lisp \
 	KJV/bin \
 	KJV/${WHO}/README \

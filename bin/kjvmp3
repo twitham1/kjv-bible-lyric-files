@@ -19,7 +19,7 @@ use Statistics::Descriptive;
 my %opt = (mp3 => $cache);	# defaults
 
 GetOptions(\%opt, qw(mp3|m=s lyric|l kjv|t=s verbose|v words|w n|dry
-read|r=i annotate|a file|f=s check|c syllable|s))
+read|r=i annotate|a file|f=s check|c syllable|s bookmark|b))
     or die "usage: $0 [options] | '<book> Chapter <num>'
 -m | --mp3	location of mp3 files (. || $opt{mp3})
 -f | --file <file>	read the input from file, required for filters:
@@ -27,6 +27,7 @@ read|r=i annotate|a file|f=s check|c syllable|s))
 -s | --syllable measure the words and syllables in the text
 -r | --read = N	generate daily reading schedule for N days
 -a | annotate	annotate reading schedule into listed files
+-b | --bookmark	generate monthly bookmarks of reading schedule
 -l | --lyric	generate 1189 .lrc lyric files
 -v | --verbose	show syllables per line with -l, reading stats with -r
 -w | --words	show syllables per word with -l
@@ -74,6 +75,10 @@ if ($opt{lyric}) {		# generate lyric files for mythmusic!
 } elsif ($opt{annotate}) {	# add reading schedule to each file
 
     &annotate;
+
+} elsif ($opt{bookmark}) {	# add reading schedule to each file
+
+    &bookmarks;
 
 } elsif (@ARGV and $ARGV[0] =~ /(.+) Chapter (\d+)/) { # original purpose: audio player
 
@@ -376,4 +381,22 @@ sub annotate { # use -r output to add reading schedule into given files
 	close OUT or die $!;
 	rename $tmp, $file or die $!;
     }
+}
+
+sub bookmarks {		 # use -r output to generate monthly bookmarks
+    open FILE, $opt{file} or die "$opt{file}: $!";
+    my $head = "\n\nBy Date: - Read through:\n\n";
+    my $foot = '';
+    my %done;
+    while (<FILE>) {		# -r reading plan
+	s/\d+\t//;
+	s/( of John)? Chapter\b//;
+	/((\w+)\s+\d+).*\{ (.*) \}/ or next;
+	$done{$2}++ or print "$foot$head";
+	print "$1 - $3\n";
+	$foot = "\nRead the Bible in a Year!\n"
+	    . chr(12) . "\n";
+    }
+    chomp $foot;
+    print $foot;
 }

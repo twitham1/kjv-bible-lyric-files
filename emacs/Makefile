@@ -17,6 +17,7 @@ dist:
 	KJV/COPYING \
 	KJV/Makefile \
 	KJV/*.txt \
+	KJV/bookmarks.ps \
 	KJV/site-lisp \
 	KJV/bin \
 	KJV/${WHO}/README \

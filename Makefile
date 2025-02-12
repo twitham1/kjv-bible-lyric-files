@@ -12,8 +12,8 @@ KJV=bin/kjv
 # KJV mp3 player and lyric file generator, by twitham
 KJVMP3=bin/kjvmp3
 
-# get the text, measure, plan reading, annotate
-all: yearsum.txt
+# get the text, measure, plan reading, annotate, format bookmarks
+all: kjv.txt bookmarks.ps
 
 # format whole KJV from Sword
 kjv.tmp:
@@ -27,12 +27,23 @@ kjv-syb.tmp: kjv.tmp
 yearplan.txt: kjv-syb.tmp
 	${KJVMP3} -r 365 -f kjv-syb.tmp > yearplan.txt
 
-# annotate reading plan into kjv.txt and summarize
-yearsum.txt: yearplan.txt
+# annotate reading plan into kjv.txt
+kjv.txt: yearplan.txt
 	cp kjv.tmp kjv.txt
 	cp kjv-syb.tmp kjv-syb.txt
 	${KJVMP3} -a -f yearplan.txt kjv.txt kjv-syb.txt
-	grep ' 1/' kjv.txt | perl -pe 's/.*\{ (.+) Chapter (\d+).*\*\* (.+)\s+(\S+) \*\*/sprintf "%-13s %3s  %s %s", $3, $4, $1, $2/e' > yearsum.txt
+
+# generate reading schedule bookmarks
+bookmarks.txt: yearplan.txt
+	${KJVMP3} -b -f yearplan.txt > bookmarks.txt
+
+# reading schedule on a bookmark per month
+bookmarks.ps: bookmarks.txt
+	a2ps -M Letterdj -r --columns 3 -l 32 -B -o bookmarks.ps bookmarks.txt
+
+# print six bookmarks on two double-sided pages
+print: bookmarks.ps
+	lpr -o sides=two-sided-long-edge bookmarks.ps
 
 clean:
 	rm kjv*.tmp kjv*.txt year*.txt
