@@ -131,12 +131,13 @@ sub play {
 
 sub len {			# return the length of the text
     my $syb = my $word = my $num = 0;
+    my $chap;
     for my $line (@_) {
 
 	my $len = 0;
-	$line =~ /^(\S+ \d+:\d+:)?\s*(.*)/; # ignore chapter/verse leader
-
-	(my $text = $2) =~ s/\s+\*\*.*//; # ignore reading schedule
+	$line =~ /^((\S+ \d+):\d+:)?\s*(.*)/; # ignore chapter/verse leader
+	$2 and $chap = $2;
+	(my $text = $3) =~ s/\s+\*\*.*//; # ignore reading schedule
 
 	$text =~ s/^\W+//;
 	my $words = split /\W+/, $text;
@@ -161,8 +162,8 @@ sub len {			# return the length of the text
 	$word += $words;
 	$num++;
     }
-    print qq'$word\t$syb\t\t\t*** ($word words, ',
-	qq'$syb reading syllables in $num lines)\n';
+    print qq'$word\t$syb\t$chap\t\t*** ($syb syllables, ',
+	qq'$word words, $num lines)\n';
     return $syb;
 }
 
@@ -229,7 +230,8 @@ sub lyric {
     }
     my $per = $duration / $len;	# seconds per reading syllable of text
     my $t = 0;
-    open OUT, '>:encoding(UTF-8)', ($opt{n} ? '/dev/null' : $out) or die $!;
+    open OUT, '>:encoding(UTF-8)', ($opt{n} ? '/dev/null' : $out)
+	or die $!;
     for my $line (@$lineref) {
 	my $min = int($t / 60);
 	my $sec = $t - $min * 60;
@@ -254,7 +256,7 @@ sub readplan {		  # generate reading schedule from kjv-syb.tmp
     open FILE, $opt{file} or die "$opt{file}: $!";
     while (<FILE>) {		# words syllables text
 	m/(\{ (\w.+\d) \})/ and $chap = $1;
-	m/^(\d+)\t(\d+)\t.*syllables.*in/ or next;
+	m/^(\d+)\t(\d+)\t.*syllables\b/ or next;
 	push @chap, $2;
 	$syb += $2;		# running total
 	$syb{$chap} = $syb;	# syllables to this chapter end
@@ -331,7 +333,7 @@ sub tryplan {
 		$num = 0;
 		map { $num += $_ } @me;
 	    } while ($num < $len);
-	    printf "%d\t%s\t%d\t%s\t@me\n", $len, $ts, $delta, $chap;
+	    printf "%d\t%s\t%.0f\t%s\t@me\n", $len, $ts, $delta, $chap;
 	}
 	$date += 24 * 60 * 60;
     }

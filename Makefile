@@ -25,7 +25,8 @@ kjv-syb.tmp: kjv.tmp
 
 # generate yearly reading plan
 yearplan.txt: kjv-syb.tmp
-	${KJVMP3} -r 365 -f kjv-syb.tmp > yearplan.txt
+	${KJVMP3} -r 365 -f kjv-syb.tmp > yearplan.tmp
+	echo use bin/kjvpng to turn yearplan.tmp into yearplan.txt
 
 # annotate reading plan into kjv.txt
 kjv.txt: yearplan.txt

@@ -29,11 +29,12 @@ dist: lrc.log
 	cat ./${WHO}/README > README && \
 	cat README.md >> README && \
 	cd .. && \
-	tar zcvf KJV-${WHO}.tgz \
+	tar zcvf KJV-${WHO}.tgz --exclude '.*' \
 	KJV/README \
 	KJV/COPYING \
 	KJV/Makefile \
 	KJV/*.txt \
+	KJV/*.png \
 	KJV/bookmarks.ps \
 	KJV/site-lisp \
 	KJV/bin \

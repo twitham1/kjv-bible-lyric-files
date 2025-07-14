@@ -1,0 +1,260 @@
+#!/usr/bin/perl
+
+# draw a PNG image of the reading plan to visually see if optimum
+
+# TODO: this could be interactive: clicking a top/bottom chapter moves
+# it to the next/prev day and redraws the picture.
+
+use warnings;
+use strict;
+use Statistics::Descriptive;
+use Prima qw(Application ImageViewer);
+use Time::Local;
+use POSIX qw(strftime);
+
+my $days = 365;
+my $date = timelocal(0, 0, 12, 1, 0, 3); # 1973 - 1975 no leap years
+my $stat = Statistics::Descriptive::Sparse->new();
+my($d, $sybs);
+
+my $mw = Prima::MainWindow->new(
+    text     => 'KJV Reading Plan',
+    menuItems =>
+    [['~File' =>
+      [
+       ['~Quit', 'q', ord 'q', sub { exit } ],
+      ]
+     ]],
+    size     => [1600, 900],
+    );
+my($width, $height) = (1920, 1080); # FHD
+$width *= 2; $height /= 2;
+my $im = Prima::Image->new(width => $width, height=> $height,
+			   type => im::RGB);
+my $iv = $mw->insert(ImageViewer =>
+	    pack => { qw/side top fill both expand 1/ },
+	    image => $im,
+	    zoom  => 2,
+	    # stretch => 1,
+    );
+$im->color(cl::White);
+
+sub Prima::ImageViewer::on_mousemove
+{
+    my ( $self, $mod, $x, $y, $dbl) = @_;
+    my @pt = $self->screen2point($x, $y);
+    my $day = int $pt[0] / $width * $days;
+#    warn "move $x $y\t@pt\t$day\n";
+    if (my $today = $d->[$day]) {
+	for my $chap (@$today) {
+	    if ($pt[1] < $chap->{top}) {
+		my $txt = "$chap->{syb}\n$chap->{name}\n$chap->{long}";
+		$iv->hint($txt);
+		warn "$txt\n";
+		last;
+	    }
+	}
+    }
+}
+sub Prima::ImageViewer::on_mouseclick
+{
+    my ( $self, $btn, $mod, $x, $y, $dbl) = @_;
+    # print "click @_";
+    my @pt = $self->screen2point($x, $y);
+    my $day = int $pt[0] / $width * $days;
+    print "click $x $y\t-> @pt\tday $day\n";
+}
+
+my @chap;
+my $syb = 0;
+my $num = 0;
+my $chapter;
+my $file = 'kjv-syb.tmp';
+open FILE, $file or die "$file: $!";
+while (<FILE>) {			# kjv-syb.tmp
+    m/\t\*\*\t\t(\{.+\})/ and $chapter = $1;
+    m/\t(\w+ \d+)\t\t.*?(\d+) syllables,/ or next;
+    push @chap, { name	=> $1,
+		  long	=> $chapter,
+		  num	=> $num++,
+		  syb	=> $2,
+		  begin	=> $syb,
+		  end	=> $syb + $2,
+    };
+    $syb += $2;
+}
+
+use Data::Dumper;
+# print Dumper \@chap;
+
+&best;
+($d, $sybs) = &days(@chap);
+print &statstring(@$sybs), "\n";
+
+&pushtall;
+($d, $sybs) = &days(@chap);
+print &statstring(@$sybs), "\n";
+
+&pulltall;
+($d, $sybs) = &days(@chap);
+print &statstring(@$sybs), "\n";
+
+# print Dumper $d;
+
+my $w = $width / $days;
+my $h = $height / ($syb / $days * 2);
+$im->font->name('fixed');
+$im->font->height(20);
+$im->text_out(join('', map { sprintf '%7s', $_ }
+		   qw{days mean range stdev min max mindex maxdex}),
+	      5, $height - 20);
+my $stats = &statstring(@$sybs);
+$im->text_out($stats, 5, $height - 40);
+$im->text_out("Syllable based KJV Reading Plan for $days days",
+	      $width / 2, $height - 20);
+$im->text_out("Aims for minimum range and standard deviation",
+	      $width / 2, $height - 40);
+$im->font->height($w);
+$im->font->direction(90);
+$im->lineWidth(1);
+
+$stats =~ s/^ +//;
+my @stats = split / +/, $stats;
+$file = '.out-' . join('-', map { sprintf '%05.0f', $_ } @stats[0..3]);
+
+open FILE, '>', "$file.txt" or die "$file.txt: $!";
+
+my @color = (cl::Green, cl::Red, cl::Blue, cl::Yellow);
+my $perfect = my $ss = 0;
+my($px, $py);
+for my $day (@$d) {
+    $im->color(cl::White);
+    $perfect += $stat->mean;
+    my $s = 0;
+    my($dn, $left, $right, $bot);
+    my $name;
+    my @this;
+    for my $chap (@$day) {
+	$name = $chap->{long};
+	$dn = $chap->{day};
+	$left = $w * $dn;
+	$right = $left + $w;
+	$bot = $s * $h;
+	push @this, $chap->{syb};
+	$s += $chap->{syb};
+	$ss += $chap->{syb};
+	my $top = $s * $h - 2;
+	$chap->{top} = $top;	# for mouse pointer
+	$im->rect_fill($left, $bot, $right, $top,
+		       1, cl::Black, $color[$dn % 2]);
+	$im->text_out($chap->{name}, $left + $w - 1, $bot);
+    }
+    my $ts = strftime "%10B %e", localtime $date;
+    $date += 24 * 60 * 60;
+    my $diff = $ss - $perfect;
+    $im->text_out(sprintf("%3d  %5d  $ts", $dn, scalar @$day),
+		  $left + $w - 1, $stat->max * $h);
+    my $x = $left + $w / 2;
+    my $y = ($stat->mean + $diff) * $h;
+    $im->color(cl::Yellow);
+    $im->line($px, $py, $x, $y) if $px;
+    ($px, $py) = ($x, $y);
+    print FILE join("\t", $s, $ts, int($diff + 0.5), $name, "@this"), "\n";
+}
+$im->linePattern(lp::Dot);
+for my $line ($stat->min, $stat->mean, $stat->max) {
+    $im->line(0, $line * $h, $width, $line * $h);
+}
+
+$im->save("$file.png");
+close FILE or die $!;
+
+run Prima;
+
+sub days {			# build the days from the chapters
+    my($day, $syb);
+    for my $c (@_) {
+	push @{$day->[$c->{day}]}, $c;
+	$syb->[$c->{day}] += $c->{syb};
+    }
+    return $day, $syb;
+}
+
+sub statstring {		# sortable stat string
+    return join("", map { sprintf ' %7.0f', $_ } &stats(@_));
+}
+
+sub stats {
+    $stat->clear;
+    $stat->add_data(@_);
+    return
+	$stat->count,
+	$stat->mean,
+	$stat->sample_range,
+	$stat->standard_deviation,
+	$stat->min,
+	$stat->max,
+	$stat->mindex,
+	$stat->maxdex;
+}
+
+sub best {
+    my $day = my $i = 0;
+    open FILE, 'yearplan.tmp' or die $!;
+    # open FILE, 'best.txt' or die $!;
+    while (<FILE>) {
+	chomp;
+	s/.*\t//;
+	map { $chap[$i++]->{day} = $day } split;
+	$day++;
+    }
+    close FILE;
+}
+
+sub pushtall {			# push tall to shorter next
+    for (my $i = 0; $i < @$d; $i++) {
+	my $this = $d->[$i];
+	my $next = $d->[$i + 1] or next;
+	my $me  = $this->[-1]{end} - $this->[0]{begin};
+	my $you = $next->[-1]{end} - $next->[0]{begin};
+	$you or next;
+	my $j = 0;
+	while (my $one = pop @{$this}) {
+	    my $n = $one->{syb};
+	    if ($me - $n > $you) {
+		warn "pushing $n $one->{name} at $i ($me > $you)\n";
+		$me -= $n;
+		$you += $n;
+		$one->{day}++;
+		unshift @{$next}, $one;
+	    } else {		# revert
+		push @{$this}, $one;
+		last;
+	    }
+	}
+    }
+}
+
+sub pulltall {			# pull tall to shorter prev
+    for (my $i = 0; $i < @$d; $i++) {
+	my $this = $d->[$i];
+	my $prev = $d->[$i - 1] or next;
+	my $me  = $this->[-1]{end} - $this->[0]{begin};
+	my $you = $prev->[-1]{end} - $prev->[0]{begin};
+	$you or next;
+	my $j = 0;
+	while (my $one = shift @{$this}) {
+	    my $n = $one->{syb};
+	    if ($me - $n > $you) {
+		warn "pulling $n $one->{name} at $i ($me > $you)\n";
+		$me -= $n;
+		$you += $n;
+		$one->{day}--;
+		push @{$prev}, $one;
+	    } else {		# revert
+		unshift @{$this}, $one;
+		last;
+	    }
+	}
+    }
+}
