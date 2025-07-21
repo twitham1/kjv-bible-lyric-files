@@ -1,193 +1,284 @@
 #!/usr/bin/perl
 
-# draw a PNG image of the reading plan to visually see if optimum
+# draw an interactive PNG image of the reading plan
 
-# TODO: this could be interactive: clicking a top/bottom chapter moves
-# it to the next/prev day and redraws the picture.
+package Prima::PlanViewer;
 
-use warnings;
 use strict;
-use Statistics::Descriptive;
-use Prima qw(Application ImageViewer);
+use warnings;
 use Time::Local;
 use POSIX qw(strftime);
+use Statistics::Descriptive;
+use Prima qw/ImageViewer Label Lists/;
 
-my $days = 365;
-my $date = timelocal(0, 0, 12, 1, 0, 3); # 1973 - 1975 no leap years
-my $stat = Statistics::Descriptive::Sparse->new();
-my($d, $sybs);
+use vars qw(@ISA);
+@ISA = qw(Prima::ImageViewer);
 
-my $mw = Prima::MainWindow->new(
-    text     => 'KJV Reading Plan',
-    menuItems =>
+sub profile_default
+{
+    my $def = $_[ 0]-> SUPER::profile_default;
+    my %prf = (
+	size => [1600, 900],
+	selectable => 1,
+	zoom => 2,
+	buffered => 1,
+	);
+    @$def{keys %prf} = values %prf;
+    return $def;
+}
+
+sub init {
+    my $self = shift;
+    my %profile = $self->SUPER::init(@_);
+    my($w, $h) = $self->size;
+    my @opt = qw/Prima::Label autoHeight 1/; # transparent 1/;
+
+    my $pad = $self->{pad} = 20; # pixels between edge and text, > scrollbar
+
+    $self->insert(@opt, name => 'NW', growMode => gm::GrowLoY,
+		  top => $h - $pad * 4, left => $pad);
+
+    $self->insert('ListBox',
+		  name => 'history',
+		  multiSelect => 0,
+		  font => { size => 18 },
+		  items => ['range stddev change'],
+		  vScroll => 1,
+		  hScroll => 0,
+		  align => ta::Left,
+		  width => 500, height => 200,
+		  growMode => gm::XCenter|gm::GrowLoY,
+		  alignment => ta::Center,
+		  top => $h - $pad,
+	);
+
+    # $self->insert(@opt, name => 'NE', growMode => gm::GrowHiY|gm::GrowLoX,
+    #		  top => $h - $pad, right => $w - $pad,
+    #		 alignment => ta::Right);
+
+    # $self->insert(@opt, name => 'SW', left => $pad, bottom => $pad);
+    # $self->insert(@opt, name => 'SE', growMode => gm::GrowLoX,
+    #		  bottom => $pad, right => $w - $pad,
+    #		  transparent => 1, # nice to see image through this big box
+    #		  alignment => ta::Right);
+    # $self->insert(@opt, name => 'S', growMode => gm::XCenter, bottom => $pad,
+    #		  alignment => ta::Center);
+
+    $self->{days} = 365;
+    $self->{kjvfile} = 'kjv-syb.tmp'; # measured text
+    ($self->{syb}, $self->{chap}) = $self->measuredtext;
+
+    $self->{width} = 1920 * 2;
+    $self->{height} = 1080 / 2;
+    $self->image(
+	Prima::Image->new(width => $self->{width}, height => $self->{height},
+			  type => im::RGB));
+    $self->{stat} = Statistics::Descriptive::Sparse->new();
+    # $self->best;
+
+    return %profile;
+}
+
+sub menu {
+    my($self) = @_;
     [['~File' =>
       [
+       ['~Best', 'b', ord 'b', sub { $self->best } ],
        ['~Quit', 'q', ord 'q', sub { exit } ],
       ]
      ]],
-    size     => [1600, 900],
-    );
-my($width, $height) = (1920, 1080); # FHD
-$width *= 2; $height /= 2;
-my $im = Prima::Image->new(width => $width, height=> $height,
-			   type => im::RGB);
-my $iv = $mw->insert(ImageViewer =>
-	    pack => { qw/side top fill both expand 1/ },
-	    image => $im,
-	    zoom  => 2,
-	    # stretch => 1,
-    );
-$im->color(cl::White);
+}
 
-sub Prima::ImageViewer::on_mousemove
+sub update {			# redraw my PNG after a change
+    my($self, $comment) = @_;
+    $comment ||= '';
+    $self->placedays;
+    $self->drawplan;
+    $self->history->add_items(sprintf "%5.0f %9.3f $comment",
+			      $self->range, $self->sdev);
+    $self->history->focusedItem($self->history->count);
+    $self->repaint;
+}
+
+sub measuredtext {     # return total syllables and [chapters] of text
+    my($self) = @_;
+    my @chap;
+    my $syb = 0;
+    my $num = 0;
+    my $chapter;
+    my $file = $self->{kjvfile};
+    open FILE, $file or die "$file: $!";
+    while (<FILE>) {		# kjv-syb.tmp
+	m/\t\*\*\t\t(\{.+\})/ and $chapter = $1;
+	m/\t(\w+ \d+)\t\t.*?(\d+) syllables,/ or next;
+	push @chap, { name	=> $1,
+		      long	=> $chapter,
+		      num	=> $num++,
+		      syb	=> $2,
+		      begin	=> $syb,
+		      end	=> $syb + $2,
+	};
+	$syb += $2;
+    }
+    close FILE or die $!;
+    return $syb, \@chap;
+}
+
+sub drawplan {
+    my($self) = @_;
+    my $date = timelocal(0, 0, 12, 1, 0, 3); # 1973 - 1975 no leap years
+    my $w = $self->{width} / $self->{days};
+    my $h = $self->{height} / ($self->{syb} / $self->{days} * 2);
+    my $im = $self->{image};
+
+    $im->color(cl::White);
+    $im->backColor(cl::Black);
+    $im->clear;
+    $im->font->name('fixed');
+    $im->font->height(20);
+    $im->font->direction(0);
+    $im->text_out(join('', map { sprintf '%7s', $_ }
+		       qw{days mean range stdev min max mindex maxdex}),
+		  5, $self->{height} - 20);
+    $im->text_out($self->statstring, 5, $self->{height} - 40);
+    $im->text_out("Syllable based KJV Reading Plan for $self->{days} days",
+		  $self->{width} / 2, $self->{height} - 20);
+    $im->text_out("Goal: minimum range and standard deviation",
+		  $self->{width} / 2, $self->{height} - 40);
+    $im->font->height($w);
+    $im->font->direction(90);
+    $im->lineWidth(1);
+
+    my $file = 0;
+    my $tmp = sprintf '%05.0f-%09.3f', $self->range, $self->sdev;
+    if ($tmp lt ($self->{best} || '9999')) {
+	$self->{best} = $tmp;
+	$file = join ('-', '.out', $self->{days}, $tmp);
+    }
+
+    open FILE, '>', $file ? "$file.txt" : '/dev/null' or die "$file.txt: $!";
+
+    my @color = (cl::Green, cl::Red, cl::Blue, cl::Yellow);
+    my $perfect = my $ss = 0;
+    my($px, $py) = (0, $self->{stats}[1] * $h); # mean
+    for my $day (@{$self->{day}}) {
+	$im->color(cl::White);
+	$perfect += $self->{stats}[1];
+	my $s = 0;
+	my($dn, $left, $right, $bot);
+	my $name;
+	my @this;
+	for my $chap (@$day) {
+	    $name = $chap->{long};
+	    $dn = $chap->{day};
+	    $left = $w * $dn;
+	    $right = $left + $w;
+	    $bot = $s * $h;
+	    push @this, $chap->{syb};
+	    $s += $chap->{syb};
+	    $ss += $chap->{syb};
+	    my $top = $s * $h - 2;
+	    $chap->{top} = $top; # for mouse pointer
+	    my $color = $color[$dn % 2];
+	    ($color = $color[2] and $chap->{moved} = 0)
+		if $chap->{moved};
+	    $im->rect_fill($left, $bot, $right, $top,
+			   1, cl::Black, $color);
+	    $im->text_out($chap->{name}, $left + $w - 1, $bot);
+	}
+	my $ts = strftime "%10B %e", localtime $date;
+	$date += 24 * 60 * 60;
+	my $diff = $ss - $perfect;
+	$im->color($color[$dn % 2]);
+	$im->text_out(sprintf("%3d  %5d  $ts", $dn, scalar @$day),
+		      $left + $w - 1, $self->max * $h);
+	my $x = $left + $w / 2;
+	my $y = ($self->{stats}[1] + $diff) * $h;
+	$im->color(cl::Yellow);
+	$im->linePattern(lp::Dash);
+	$im->line($px, $py, $x, $y) if $px;
+
+	($px, $py) = ($x, $y);
+	print FILE join("\t", $s, $ts, int($diff + 0.5), $name, "@this"), "\n";
+    }
+    $im->linePattern(lp::Dot);
+    for my $line ($self->min, $self->{stats}[1], $self->max) {
+	$im->line(0, $line * $h, $self->{width}, $line * $h);
+    }
+    $im->save("$file.png") and warn "saved $file\n" if $file;
+    close FILE or die $!;
+}
+
+sub on_mousemove
 {
-    my ( $self, $mod, $x, $y, $dbl) = @_;
+    my ($self, $mod, $x, $y, $dbl) = @_;
     my @pt = $self->screen2point($x, $y);
-    my $day = int $pt[0] / $width * $days;
-#    warn "move $x $y\t@pt\t$day\n";
-    if (my $today = $d->[$day]) {
+    my $day = int $pt[0] / $self->{width} * $self->{days};
+    my $txt = "Day $day";
+    if (my $today = $self->{day}[$day]) {
 	for my $chap (@$today) {
 	    if ($pt[1] < $chap->{top}) {
-		my $txt = "$chap->{syb}\n$chap->{name}\n$chap->{long}";
-		$iv->hint($txt);
-		warn "$txt\n";
+		$txt = "$chap->{long}\n$chap->{syb} syllables in $chap->{name}\n$txt";
 		last;
 	    }
 	}
     }
+    $self->NW->text($txt);
 }
-sub Prima::ImageViewer::on_mouseclick
+
+sub on_mouseclick
 {
-    my ( $self, $btn, $mod, $x, $y, $dbl) = @_;
-    # print "click @_";
+    my ($self, $btn, $mod, $x, $y, $dbl) = @_;
     my @pt = $self->screen2point($x, $y);
-    my $day = int $pt[0] / $width * $days;
-    print "click $x $y\t-> @pt\tday $day\n";
-}
-
-my @chap;
-my $syb = 0;
-my $num = 0;
-my $chapter;
-my $file = 'kjv-syb.tmp';
-open FILE, $file or die "$file: $!";
-while (<FILE>) {			# kjv-syb.tmp
-    m/\t\*\*\t\t(\{.+\})/ and $chapter = $1;
-    m/\t(\w+ \d+)\t\t.*?(\d+) syllables,/ or next;
-    push @chap, { name	=> $1,
-		  long	=> $chapter,
-		  num	=> $num++,
-		  syb	=> $2,
-		  begin	=> $syb,
-		  end	=> $syb + $2,
-    };
-    $syb += $2;
-}
-
-use Data::Dumper;
-# print Dumper \@chap;
-
-&best;
-($d, $sybs) = &days(@chap);
-print &statstring(@$sybs), "\n";
-
-&pushtall;
-($d, $sybs) = &days(@chap);
-print &statstring(@$sybs), "\n";
-
-&pulltall;
-($d, $sybs) = &days(@chap);
-print &statstring(@$sybs), "\n";
-
-# print Dumper $d;
-
-my $w = $width / $days;
-my $h = $height / ($syb / $days * 2);
-$im->font->name('fixed');
-$im->font->height(20);
-$im->text_out(join('', map { sprintf '%7s', $_ }
-		   qw{days mean range stdev min max mindex maxdex}),
-	      5, $height - 20);
-my $stats = &statstring(@$sybs);
-$im->text_out($stats, 5, $height - 40);
-$im->text_out("Syllable based KJV Reading Plan for $days days",
-	      $width / 2, $height - 20);
-$im->text_out("Aims for minimum range and standard deviation",
-	      $width / 2, $height - 40);
-$im->font->height($w);
-$im->font->direction(90);
-$im->lineWidth(1);
-
-$stats =~ s/^ +//;
-my @stats = split / +/, $stats;
-$file = '.out-' . join('-', map { sprintf '%05.0f', $_ } @stats[0..3]);
-
-open FILE, '>', "$file.txt" or die "$file.txt: $!";
-
-my @color = (cl::Green, cl::Red, cl::Blue, cl::Yellow);
-my $perfect = my $ss = 0;
-my($px, $py);
-for my $day (@$d) {
-    $im->color(cl::White);
-    $perfect += $stat->mean;
-    my $s = 0;
-    my($dn, $left, $right, $bot);
-    my $name;
-    my @this;
-    for my $chap (@$day) {
-	$name = $chap->{long};
-	$dn = $chap->{day};
-	$left = $w * $dn;
-	$right = $left + $w;
-	$bot = $s * $h;
-	push @this, $chap->{syb};
-	$s += $chap->{syb};
-	$ss += $chap->{syb};
-	my $top = $s * $h - 2;
-	$chap->{top} = $top;	# for mouse pointer
-	$im->rect_fill($left, $bot, $right, $top,
-		       1, cl::Black, $color[$dn % 2]);
-	$im->text_out($chap->{name}, $left + $w - 1, $bot);
+    my $day = int $pt[0] / $self->{width} * $self->{days};
+    my $move = 0;
+    if (my $today = $self->{day}[$day]) {
+	my $bot = 1;
+	for my $chap (@$today) {
+	    if ($pt[1] < $chap->{top}) {
+		my $txt = "$chap->{syb}\n$chap->{name}\n$chap->{long}";
+		if ($day and $bot) {
+		    $move = "< $chap->{name}";
+		    $chap->{day}--;
+		    $chap->{moved} = 1;
+		} elsif ($chap eq $today->[-1]) {
+		    $move = "> $chap->{name}";
+		    $chap->{day}++;
+		    $chap->{moved} = 1;
+		}
+		last;
+	    }
+	    $bot = 0;
+	}
     }
-    my $ts = strftime "%10B %e", localtime $date;
-    $date += 24 * 60 * 60;
-    my $diff = $ss - $perfect;
-    $im->text_out(sprintf("%3d  %5d  $ts", $dn, scalar @$day),
-		  $left + $w - 1, $stat->max * $h);
-    my $x = $left + $w / 2;
-    my $y = ($stat->mean + $diff) * $h;
-    $im->color(cl::Yellow);
-    $im->line($px, $py, $x, $y) if $px;
-    ($px, $py) = ($x, $y);
-    print FILE join("\t", $s, $ts, int($diff + 0.5), $name, "@this"), "\n";
-}
-$im->linePattern(lp::Dot);
-for my $line ($stat->min, $stat->mean, $stat->max) {
-    $im->line(0, $line * $h, $width, $line * $h);
+    $self->update($move) if $move;
 }
 
-$im->save("$file.png");
-close FILE or die $!;
-
-run Prima;
-
-sub days {			# build the days from the chapters
+sub placedays {			# build the days from the chapters
+    my($self) = @_;
     my($day, $syb);
-    for my $c (@_) {
-	push @{$day->[$c->{day}]}, $c;
-	$syb->[$c->{day}] += $c->{syb};
+    $self->{day} = [];
+    $self->{sybs} = [];
+    for my $c (@{$self->{chap}}) {
+	push @{$self->{day}[$c->{day}]}, $c;
+	$self->{sybs}[$c->{day}] += $c->{syb};
     }
-    return $day, $syb;
+    $self->stats($self->{sybs});
 }
 
 sub statstring {		# sortable stat string
-    return join("", map { sprintf ' %7.0f', $_ } &stats(@_));
+    my($self) = @_;
+    return join("", map { sprintf ' %7.0f', $_ } @{$self->stats});
 }
 
-sub stats {
-    $stat->clear;
-    $stat->add_data(@_);
-    return
+sub stats {			# all stats in sortable order
+    my($self, $aref) = @_;
+    my $stat = $self->{stat};
+    if ($aref) {
+	$stat->clear;
+	$stat->add_data(@$aref);
+    }
+    return $self->{stats} = [
 	$stat->count,
 	$stat->mean,
 	$stat->sample_range,
@@ -195,23 +286,44 @@ sub stats {
 	$stat->min,
 	$stat->max,
 	$stat->mindex,
-	$stat->maxdex;
+	$stat->maxdex
+	];
 }
 
-sub best {
+sub count	{ return $_[0]->{stats}[0] }
+sub mean	{ return $_[0]->{stats}[1] }
+sub range	{ return $_[0]->{stats}[2] }
+sub sdev	{ return $_[0]->{stats}[3] }
+sub min		{ return $_[0]->{stats}[4] }
+sub max		{ return $_[0]->{stats}[5] }
+sub mindex	{ return $_[0]->{stats}[6] }
+sub maxdex	{ return $_[0]->{stats}[7] }
+
+sub best {			# best plan found so far
+    my($self) = @_;
     my $day = my $i = 0;
-    open FILE, 'yearplan.tmp' or die $!;
-    # open FILE, 'best.txt' or die $!;
-    while (<FILE>) {
-	chomp;
-	s/.*\t//;
-	map { $chap[$i++]->{day} = $day } split;
-	$day++;
+    my $loaded = '';
+    for my $file (glob(".out-$self->{days}*.txt"), 'yearplan.tmp') {
+	if (open FILE, $file) {
+	    warn "loaded $file\n";
+	    while (<FILE>) {
+		chomp;
+		s/.*\t//;
+		map { $self->{chap}[$i++]{day} = $day } split;
+		$day++;
+	    }
+	    close FILE;
+	    $loaded = $file;
+	    last;
+	}
     }
-    close FILE;
+    $day or warn "no startup file found!";
+    $self->update($loaded);
 }
 
 sub pushtall {			# push tall to shorter next
+    my($self) = @_;
+    my $d = $self->{day};
     for (my $i = 0; $i < @$d; $i++) {
 	my $this = $d->[$i];
 	my $next = $d->[$i + 1] or next;
@@ -236,6 +348,8 @@ sub pushtall {			# push tall to shorter next
 }
 
 sub pulltall {			# pull tall to shorter prev
+    my($self) = @_;
+    my $d = $self->{day};
     for (my $i = 0; $i < @$d; $i++) {
 	my $this = $d->[$i];
 	my $prev = $d->[$i - 1] or next;
@@ -258,3 +372,24 @@ sub pulltall {			# pull tall to shorter prev
 	}
     }
 }
+
+package main;
+
+use warnings;
+use strict;
+use Prima qw(Application);
+
+my $mw = Prima::MainWindow->new(
+    text     => 'KJV Reading Plan',
+    size     => [1600, 900],
+    );
+
+my $iv = $mw->insert(PlanViewer =>
+		     pack => { qw/side top fill both expand 1/ },
+    );
+
+$mw->menuItems($iv->menu);
+
+run Prima;
+
+exit;				# kjvpng ends here.
