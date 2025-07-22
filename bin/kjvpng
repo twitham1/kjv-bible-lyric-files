@@ -37,7 +37,8 @@ sub init {
 
     $self->insert(@opt, name => 'NW', growMode => gm::GrowLoY,
 		  top => $h - $pad * 4, left => $pad);
-
+    $self->insert(@opt, name => 'North', growMode => gm::XCenter|gm::GrowLoY,
+		  top => $h - $pad, alignment => ta::Center);
     $self->insert('ListBox',
 		  name => 'history',
 		  multiSelect => 0,
@@ -49,22 +50,12 @@ sub init {
 		  width => 500, height => 200,
 		  growMode => gm::XCenter|gm::GrowLoY,
 		  alignment => ta::Center,
-		  top => $h - $pad,
+		  top => $h - $pad * 2,
 	);
 
-    # $self->insert(@opt, name => 'NE', growMode => gm::GrowHiY|gm::GrowLoX,
-    #		  top => $h - $pad, right => $w - $pad,
-    #		 alignment => ta::Right);
+    $self->{days} = 365;	# 1973 - 1975 no leap years:
+    $self->{beginning} = timelocal(0, 0, 12, 1, 0, 3);
 
-    # $self->insert(@opt, name => 'SW', left => $pad, bottom => $pad);
-    # $self->insert(@opt, name => 'SE', growMode => gm::GrowLoX,
-    #		  bottom => $pad, right => $w - $pad,
-    #		  transparent => 1, # nice to see image through this big box
-    #		  alignment => ta::Right);
-    # $self->insert(@opt, name => 'S', growMode => gm::XCenter, bottom => $pad,
-    #		  alignment => ta::Center);
-
-    $self->{days} = 365;
     $self->{kjvfile} = 'kjv-syb.tmp'; # measured text
     ($self->{syb}, $self->{chap}) = $self->measuredtext;
 
@@ -74,7 +65,7 @@ sub init {
 	Prima::Image->new(width => $self->{width}, height => $self->{height},
 			  type => im::RGB));
     $self->{stat} = Statistics::Descriptive::Sparse->new();
-    # $self->best;
+    $self->best;
 
     return %profile;
 }
@@ -83,7 +74,16 @@ sub menu {
     my($self) = @_;
     [['~File' =>
       [
-       ['~Best', 'b', ord 'b', sub { $self->best } ],
+       ['~Best so far', 'b', ord 'b', sub { $self->best } ],
+       ['~Closest day', 'c', ord 'c', sub { $self->closest } ],
+       [],
+       ['Push talls ~Right', 'r', ord 'r', sub { $self->pushtall } ],
+       ['Pull talls ~Left', 'l', ord 'l', sub { $self->pulltall } ],
+       [],
+       ['Zoom ~2', '2', ord '2', sub { $self->zoom(2) } ],
+       ['Zoom ~1', '1', ord '1', sub { $self->zoom(1) } ],
+       ['Zoom ~Half', 'h', ord 'h', sub { $self->zoom(0.5) } ],
+       [],
        ['~Quit', 'q', ord 'q', sub { exit } ],
       ]
      ]],
@@ -97,6 +97,7 @@ sub update {			# redraw my PNG after a change
     $self->history->add_items(sprintf "%5.0f %9.3f $comment",
 			      $self->range, $self->sdev);
     $self->history->focusedItem($self->history->count);
+    $self->North->text($self->statstring);
     $self->repaint;
 }
 
@@ -126,7 +127,7 @@ sub measuredtext {     # return total syllables and [chapters] of text
 
 sub drawplan {
     my($self) = @_;
-    my $date = timelocal(0, 0, 12, 1, 0, 3); # 1973 - 1975 no leap years
+    my $date = $self->{beginning};
     my $w = $self->{width} / $self->{days};
     my $h = $self->{height} / ($self->{syb} / $self->{days} * 2);
     my $im = $self->{image};
@@ -214,7 +215,9 @@ sub on_mousemove
     my ($self, $mod, $x, $y, $dbl) = @_;
     my @pt = $self->screen2point($x, $y);
     my $day = int $pt[0] / $self->{width} * $self->{days};
-    my $txt = "Day $day";
+    my $ts = strftime "%10B %e", localtime
+	$self->{beginning} + $day * 24 * 60 * 60;
+    my $txt = "Day $day = $ts";
     if (my $today = $self->{day}[$day]) {
 	for my $chap (@$today) {
 	    if ($pt[1] < $chap->{top}) {
@@ -235,6 +238,7 @@ sub on_mouseclick
     if (my $today = $self->{day}[$day]) {
 	my $bot = 1;
 	for my $chap (@$today) {
+	    next if @$today == 1;
 	    if ($pt[1] < $chap->{top}) {
 		my $txt = "$chap->{syb}\n$chap->{name}\n$chap->{long}";
 		if ($day and $bot) {
@@ -291,7 +295,7 @@ sub stats {			# all stats in sortable order
 }
 
 sub count	{ return $_[0]->{stats}[0] }
-sub mean	{ return $_[0]->{stats}[1] }
+sub mean	{ return $_[0]->{stats}[1] || ($_[0]->{syb} / $_[0]->{days}) }
 sub range	{ return $_[0]->{stats}[2] }
 sub sdev	{ return $_[0]->{stats}[3] }
 sub min		{ return $_[0]->{stats}[4] }
@@ -321,56 +325,72 @@ sub best {			# best plan found so far
     $self->update($loaded);
 }
 
+sub closest {
+    my($self) = @_;
+    my $mean = $self->mean;
+    for my $c (@{$self->{chap}}) {
+	my $day = int(($c->{syb} / 2 + $c->{begin}) / $mean);
+	$c->{day} = $day;
+    }
+    $self->update("closest day");
+}
+
 sub pushtall {			# push tall to shorter next
     my($self) = @_;
     my $d = $self->{day};
+    my $done = 0;
     for (my $i = 0; $i < @$d; $i++) {
 	my $this = $d->[$i];
 	my $next = $d->[$i + 1] or next;
 	my $me  = $this->[-1]{end} - $this->[0]{begin};
 	my $you = $next->[-1]{end} - $next->[0]{begin};
 	$you or next;
-	my $j = 0;
 	while (my $one = pop @{$this}) {
 	    my $n = $one->{syb};
 	    if ($me - $n > $you) {
 		warn "pushing $n $one->{name} at $i ($me > $you)\n";
+		$done++;
 		$me -= $n;
 		$you += $n;
-		$one->{day}++;
+		$one->{day}++ if $one->{day} < $self->{days};
 		unshift @{$next}, $one;
+		last;
 	    } else {		# revert
 		push @{$this}, $one;
 		last;
 	    }
 	}
     }
+    $self->update("$done pushed right") if $done;
 }
 
 sub pulltall {			# pull tall to shorter prev
     my($self) = @_;
     my $d = $self->{day};
+    my $done = 0;
     for (my $i = 0; $i < @$d; $i++) {
 	my $this = $d->[$i];
 	my $prev = $d->[$i - 1] or next;
 	my $me  = $this->[-1]{end} - $this->[0]{begin};
 	my $you = $prev->[-1]{end} - $prev->[0]{begin};
 	$you or next;
-	my $j = 0;
 	while (my $one = shift @{$this}) {
 	    my $n = $one->{syb};
 	    if ($me - $n > $you) {
 		warn "pulling $n $one->{name} at $i ($me > $you)\n";
+		$done++;
 		$me -= $n;
 		$you += $n;
-		$one->{day}--;
+		$one->{day}-- if $one->{day} > 0;
 		push @{$prev}, $one;
+		last;
 	    } else {		# revert
 		unshift @{$this}, $one;
 		last;
 	    }
 	}
     }
+    $self->update("$done pulled left") if $done;
 }
 
 package main;
