@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# draw an interactive PNG image of the reading plan
+# draw an interactive PNG image of a bible reading plan
 
 package Prima::PlanViewer;
 
@@ -43,7 +43,7 @@ sub init {
 		  name => 'history',
 		  multiSelect => 0,
 		  font => { size => 18 },
-		  items => ['range stddev change'],
+		  items => ['range stddev action'],
 		  vScroll => 1,
 		  hScroll => 0,
 		  align => ta::Left,

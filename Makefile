@@ -29,7 +29,7 @@ yearplan.txt: kjv-syb.tmp
 	echo use bin/kjvpng to turn yearplan.tmp into yearplan.txt
 
 # annotate reading plan into kjv.txt
-kjv.txt: yearplan.txt
+kjv.txt: yearplan.txt kjv.tmp kjv-syb.tmp
 	cp kjv.tmp kjv.txt
 	cp kjv-syb.tmp kjv-syb.txt
 	${KJVMP3} -a -f yearplan.txt kjv.txt kjv-syb.txt

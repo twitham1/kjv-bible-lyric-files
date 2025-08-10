@@ -4,9 +4,6 @@
 
 # Can also now generate reading plans and .lrc lyric files!
 
-# symlink this to the path of your 1189 *.mp3 bible chapters
-my $cache = "$ENV{HOME}/.kjv";
-
 use warnings;
 use strict;
 use Getopt::Long;
@@ -16,7 +13,30 @@ use POSIX qw(strftime);
 use File::Basename;
 use Statistics::Descriptive;
 
+# symlink this to the path of your 1189 *.mp3 bible chapters
+my $cache = "$ENV{HOME}/.kjv";
 my %opt = (mp3 => $cache);	# defaults
+my $cfile = './.kjvmp3.pl';	# configuration file
+
+# these can be overridden in a $cfile configuration file
+my $def = {
+    # given a book and chapter, return its mp3 filename
+    mp3file => sub {
+	my($book, $chap) = @_;
+	$book =~ s/ /-/g;
+	return "$book-$chap.mp3";
+    },
+    # length of the audio in exiftool -duration
+    length => sub {
+	my($sec, $chap, $next) = @_;
+	return $sec - 3;	# skip 3 seconds of end silence
+    },
+};
+my $cfg = require $cfile if -f $cfile; # must return a config hash
+my $conf = {};			       # cfg || def configuration
+for (keys %$def) {
+    $conf->{$_} = $cfg->{$_} || $def->{$_};
+}
 
 GetOptions(\%opt, qw(mp3|m=s lyric|l kjv|t=s verbose|v words|w n|dry
 read|r=i annotate|a file|f=s check|c syllable|s bookmark|b))
@@ -26,7 +46,7 @@ read|r=i annotate|a file|f=s check|c syllable|s bookmark|b))
 -c | --check	check the chapter to file map
 -s | --syllable measure the words and syllables in the text
 -r | --read = N	generate daily reading schedule for N days
--a | annotate	annotate reading schedule into listed files
+-a | --annotate	annotate reading schedule into listed files
 -b | --bookmark	generate monthly bookmarks of reading schedule
 -l | --lyric	generate 1189 .lrc lyric files
 -v | --verbose	show syllables per line with -l, reading stats with -r
@@ -44,24 +64,10 @@ if (grep / Chapter /, @ARGV) {
 	die "-f input file required, see Makefile\n";
 }
 
-# hack!!! file naming convention indicates artist
-my $who = -f '66_Revelation022.mp3' ? 'dw' # Dan Wagner
-    : -f '66_Revelation_22.mp3' ? 'sj'	   # Stephen Johnston
-    : -f 'Revelations 22.mp3' ? 'as'	   # Alexander Scourby
-    : '??';
-
-# Fix Pss 145 by ending time before the included Pss 146:1-8
-# Fix Nah 3 by ending time after the missing Nah 3:17-19
-my %fixlen = $who eq 'dw' ? (
-    'Psalms 145' => ': 0:02:19', # exiftool -duration
-    'Nahum 3' => ': 0:03:20',
-    )
-    : ();
-	   
 binmode STDOUT, ":encoding(UTF-8)";
 
 opendir DIR, '.' or die $!;
-my @mp3 = sort grep /\.mp3$/, readdir DIR;
+our @mp3 = sort grep /\.mp3$/, readdir DIR;
 closedir DIR;
 
 if ($opt{lyric}) {		# generate lyric files for mythmusic!
@@ -76,11 +82,12 @@ if ($opt{lyric}) {		# generate lyric files for mythmusic!
 
     &annotate;
 
-} elsif ($opt{bookmark}) {	# add reading schedule to each file
+} elsif ($opt{bookmark}) {	# generate bookmarks
 
     &bookmarks;
 
-} elsif (@ARGV and $ARGV[0] =~ /(.+) Chapter (\d+)/) { # original purpose: audio player
+# original purpose: audio player
+} elsif (@ARGV and $ARGV[0] =~ /(.+) Chapter (\d+)/) {
 
     &play($1, $2);
 
@@ -88,35 +95,7 @@ if ($opt{lyric}) {		# generate lyric files for mythmusic!
 
 sub file {			# book/chapter -> .mp3 filename
     my($book, $chapter) = @_;
-    $book =~ s/ /_/g;
-    $book =~ s/^III_/3/ or $book =~ s/^II_/2/ or  $book =~ s/^I_/1/;
-    $book =~ s/_of_John//;
-    my $chap = sprintf "%s%03d", $book, $chapter; # DW == default
-    if ($who eq 'sj') {	    # tweaks to match zip filenames as/of 2022
-	$book =~ s/Psalms/Psalm/;
-	$book =~ s/Proverbs/Prov/;
-	$book =~ s/Solomon/Soloman/; # files are misspelled...
-	$book =~ s/Daniel/Daniell/;
-	$book =~ s/Corinthians/Cor/; # ... or abbreviated
-	$book =~ s/Galatians/Gal/;
-	$book =~ s/Thessalonians/Thess/;
-	my $n = $book =~ /Psalm/ ? 3 : 2;
-	$chap = sprintf "%s_%0${n}d", $book, $chapter;
-    } elsif ($who eq 'as') { # tweaks to match zip filenames as/of 2024
-	$book =~ s/_/ /g;
-	$book =~ s/^([123])(\S+)/$1 $2/;
-	$book =~ s/Psalms/Psalm/;
-	$book =~ s/(Revelation)\b/$1s/;
-	for my $n (3, 2, 1) {
-	    my $file = sprintf "%s %0${n}d.mp3", $book, $chapter;
-	    # warn "checking for $file";
-	    -f $file and return $file;
-	}
-	-f "$book.mp3" and return "$book.mp3"; # 1 chapter books
-	return 0;
-    }
-    my $file = (grep /$chap.mp3/, @mp3)[0] || (grep /$book.mp3/, @mp3)[0] || 0;
-    return $file;
+    return $conf->{mp3file}(@_);
 }
 
 sub play {
@@ -217,17 +196,13 @@ sub lyric {
     my($words, $len) = split "\t", $tail or return;
     $len or return;
 
-    my $duration = $fixlen{"$book $chap"} || `exiftool -duration '$file'`;
+    chomp(my $duration = `exiftool -duration '$file'`);
     my($h, $m, $s) = ($duration =~ /: (\d+):(\d+):(\d+)/);
     defined $s or ($h, $m, $s) = ($duration =~ /: ()()(\d+\.\d+) s/);
     defined $s or warn "unknown seconds in $file\n" and return;
     $duration = ($h || 0) * 3600 + ($m || 0) * 60 + $s;
-    if ($who eq 'as') {	# book closing statement runs longer past the text
-	$duration -=
-	    $next{"$book Chapter $chap"} =~ /^$book / ? 1 : 7;
-    } else {
-	$duration -= 3;	       # seconds of silence on the end of file
-    }
+    $duration = $conf->{length}($duration, "$book Chapter $chap",
+				$next{"$book Chapter $chap"});
     my $per = $duration / $len;	# seconds per reading syllable of text
     my $t = 0;
     open OUT, '>:encoding(UTF-8)', ($opt{n} ? '/dev/null' : $out)
