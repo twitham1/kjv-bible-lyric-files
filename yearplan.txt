@@ -1,0 +1,365 @@
+3015	   January  1	-262	{ Genesis Chapter 3 }	1187 868 960
+3397	   January  2	-143	{ Genesis Chapter 7 }	958 757 830 852
+3661	   January  3	239	{ Genesis Chapter 11 }	852 976 903 930
+3108	   January  4	69	{ Genesis Chapter 15 }	791 664 936 717
+2959	   January  5	-249	{ Genesis Chapter 18 }	635 1039 1285
+2365	   January  6	-1162	{ Genesis Chapter 20 }	1588 777
+2911	   January  7	-1529	{ Genesis Chapter 23 }	1175 946 790
+3820	   January  8	-987	{ Genesis Chapter 25 }	2678 1142
+3181	   January  9	-1084	{ Genesis Chapter 27 }	1318 1863
+3643	   January 10	-719	{ Genesis Chapter 30 }	898 1236 1509
+3304	   January 11	-694	{ Genesis Chapter 32 }	2105 1199
+2934	   January 12	-1038	{ Genesis Chapter 35 }	767 1167 1000
+2829	   January 13	-1487	{ Genesis Chapter 37 }	1416 1413
+2985	   January 14	-1780	{ Genesis Chapter 40 }	1198 928 859
+3483	   January 15	-1575	{ Genesis Chapter 42 }	2054 1429
+3735	   January 16	-1118	{ Genesis Chapter 45 }	1382 1268 1085
+3642	   January 17	-754	{ Genesis Chapter 48 }	1253 1421 968
+2959	   January 18	-1073	{ Exodus Chapter 1 }	1157 1063 739
+3414	   January 19	-937	{ Exodus Chapter 4 }	954 1179 1281
+3113	   January 20	-1102	{ Exodus Chapter 7 }	895 1189 1029
+2767	   January 21	-1613	{ Exodus Chapter 9 }	1374 1393
+3873	   January 22	-1018	{ Exodus Chapter 12 }	1265 481 2127
+3412	   January 23	-884	{ Exodus Chapter 15 }	960 1388 1064
+3356	   January 24	-806	{ Exodus Chapter 18 }	1545 703 1108
+3089	   January 25	-995	{ Exodus Chapter 21 }	1004 823 1262
+3068	   January 26	-1205	{ Exodus Chapter 24 }	1146 1201 721
+3500	   January 27	-983	{ Exodus Chapter 27 }	1325 1362 813
+3800	   January 28	-461	{ Exodus Chapter 29 }	1844 1956
+3780	   January 29	40	{ Exodus Chapter 32 }	1517 689 1574
+3752	   January 30	514	{ Exodus Chapter 35 }	1011 1473 1268
+3686	   January 31	921	{ Exodus Chapter 38 }	1344 1065 1277
+3617	  February  1	1260	{ Leviticus Chapter 1 }	1587 1256 774
+3151	  February  2	1133	{ Leviticus Chapter 4 }	730 763 1658
+2393	  February  3	248	{ Leviticus Chapter 6 }	1057 1336
+3086	  February  4	56	{ Leviticus Chapter 8 }	1595 1491
+3656	  February  5	434	{ Leviticus Chapter 11 }	959 955 1742
+2969	  February  6	125	{ Leviticus Chapter 13 }	398 2571
+3705	  February  7	552	{ Leviticus Chapter 15 }	2304 1401
+3628	  February  8	902	{ Leviticus Chapter 18 }	1698 824 1106
+3493	  February  9	1117	{ Leviticus Chapter 21 }	1343 1272 878
+3114	  February 10	953	{ Leviticus Chapter 23 }	1315 1799
+3024	  February 11	699	{ Leviticus Chapter 25 }	827 2197
+3247	  February 12	668	{ Leviticus Chapter 27 }	1820 1427
+3362	  February 13	752	{ Numbers Chapter 2 }	2140 1222
+4230	  February 14	1704	{ Numbers Chapter 4 }	2043 2187
+2448	  February 15	874	{ Numbers Chapter 6 }	1335 1113
+3021	  February 16	617	{ Numbers Chapter 7 }	3021
+3503	  February 17	842	{ Numbers Chapter 10 }	1094 1076 1333
+3244	  February 18	808	{ Numbers Chapter 13 }	1528 606 1110
+3372	  February 19	902	{ Numbers Chapter 15 }	1778 1594
+2595	  February 20	218	{ Numbers Chapter 17 }	2072 523
+2707	  February 21	-352	{ Numbers Chapter 19 }	1679 1028
+2613	  February 22	-1017	{ Numbers Chapter 21 }	1198 1415
+3845	  February 23	-450	{ Numbers Chapter 24 }	1728 1127 990
+3261	  February 24	-467	{ Numbers Chapter 26 }	697 2564
+3615	  February 25	-130	{ Numbers Chapter 29 }	951 1168 1496
+2582	  February 26	-826	{ Numbers Chapter 31 }	715 1867
+3082	  February 27	-1022	{ Numbers Chapter 33 }	1567 1515
+3065	  February 28	-1235	{ Numbers Chapter 36 }	929 1424 712
+3372	     March  1	-1141	{ Deuteronomy Chapter 2 }	1864 1508
+3422	     March  2	-997	{ Deuteronomy Chapter 4 }	1242 2180
+3403	     March  3	-872	{ Deuteronomy Chapter 7 }	1272 908 1223
+3074	     March  4	-1076	{ Deuteronomy Chapter 10 }	809 1389 876
+3679	     March  5	-675	{ Deuteronomy Chapter 13 }	1324 1474 881
+3009	     March  6	-944	{ Deuteronomy Chapter 16 }	1001 996 1012
+3731	     March  7	-491	{ Deuteronomy Chapter 20 }	1021 887 886 937
+3311	     March  8	-458	{ Deuteronomy Chapter 23 }	1020 1269 1022
+3658	     March  9	-78	{ Deuteronomy Chapter 27 }	975 810 962 911
+2897	     March 10	-459	{ Deuteronomy Chapter 28 }	2897
+3623	     March 11	-114	{ Deuteronomy Chapter 31 }	1213 917 1493
+3111	     March 12	-282	{ Deuteronomy Chapter 33 }	1916 1195
+3265	     March 13	-295	{ Joshua Chapter 3 }	475 873 1094 823
+3119	     March 14	-454	{ Joshua Chapter 6 }	1010 802 1307
+3150	     March 15	-582	{ Joshua Chapter 8 }	1389 1761
+3256	     March 16	-604	{ Joshua Chapter 10 }	1194 2062
+3270	     March 17	-612	{ Joshua Chapter 13 }	1079 778 1413
+2926	     March 18	-964	{ Joshua Chapter 16 }	740 1761 425
+3902	     March 19	-340	{ Joshua Chapter 19 }	1041 1206 1655
+4050	     March 20	431	{ Joshua Chapter 22 }	486 1608 1956
+3885	     March 21	1038	{ Judges Chapter 1 }	792 1528 1565
+3470	     March 22	1230	{ Judges Chapter 4 }	1003 1296 1171
+3076	     March 23	1028	{ Judges Chapter 6 }	1187 1889
+2940	     March 24	690	{ Judges Chapter 8 }	1432 1508
+3267	     March 25	679	{ Judges Chapter 10 }	2505 762
+3609	     March 26	1010	{ Judges Chapter 13 }	1860 650 1099
+3590	     March 27	1322	{ Judges Chapter 16 }	1019 964 1607
+3697	     March 28	1741	{ Judges Chapter 19 }	581 1513 1603
+3279	     March 29	1742	{ Judges Chapter 21 }	2176 1103
+2812	     March 30	1276	{ Ruth Chapter 3 }	950 1088 774
+3690	     March 31	1688	{ I Samuel Chapter 2 }	942 1159 1589
+3658	     April  1	2068	{ I Samuel Chapter 6 }	813 1101 645 1099
+2989	     April  2	1778	{ I Samuel Chapter 9 }	794 801 1394
+3118	     April  3	1618	{ I Samuel Chapter 12 }	1267 732 1119
+3529	     April  4	1869	{ I Samuel Chapter 14 }	1088 2441
+2523	     April  5	1114	{ I Samuel Chapter 16 }	1489 1034
+3804	     April  6	1640	{ I Samuel Chapter 18 }	2537 1267
+3009	     April  7	1371	{ I Samuel Chapter 20 }	1071 1938
+3140	     April  8	1233	{ I Samuel Chapter 23 }	732 1128 1280
+3081	     April  9	1036	{ I Samuel Chapter 25 }	965 2116
+3127	     April 10	885	{ I Samuel Chapter 28 }	1259 602 1266
+3700	     April 11	1307	{ II Samuel Chapter 1 }	637 1426 542 1095
+3099	     April 12	1128	{ II Samuel Chapter 3 }	1408 1691
+2696	     April 13	546	{ II Samuel Chapter 6 }	638 1009 1049
+3585	     April 14	853	{ II Samuel Chapter 10 }	1226 772 642 945
+2683	     April 15	258	{ II Samuel Chapter 12 }	1233 1450
+3338	     April 16	318	{ II Samuel Chapter 14 }	1749 1589
+2848	     April 17	-111	{ II Samuel Chapter 16 }	1732 1116
+3050	     April 18	-339	{ II Samuel Chapter 18 }	1431 1619
+3436	     April 19	-181	{ II Samuel Chapter 20 }	2141 1295
+3970	     April 20	510	{ II Samuel Chapter 23 }	1174 1410 1386
+3596	     April 21	828	{ I Kings Chapter 1 }	1275 2321
+2269	     April 22	-181	{ I Kings Chapter 2 }	2269
+3242	     April 23	-217	{ I Kings Chapter 5 }	1244 1186 812
+3677	     April 24	181	{ I Kings Chapter 7 }	1462 2215
+3088	     April 25	-8	{ I Kings Chapter 8 }	3088
+2515	     April 26	-771	{ I Kings Chapter 10 }	1262 1253
+3503	     April 27	-546	{ I Kings Chapter 12 }	1951 1552
+3020	     April 28	-804	{ I Kings Chapter 14 }	1564 1456
+2941	     April 29	-1141	{ I Kings Chapter 16 }	1449 1492
+3054	     April 30	-1365	{ I Kings Chapter 18 }	976 2078
+3309	       May  1	-1334	{ I Kings Chapter 20 }	1091 2218
+3684	       May  2	-928	{ I Kings Chapter 22 }	1369 2315
+3529	       May  3	-677	{ II Kings Chapter 3 }	998 1270 1261
+3438	       May  4	-517	{ II Kings Chapter 5 }	1954 1484
+2690	       May  5	-1105	{ II Kings Chapter 7 }	1501 1189
+3236	       May  6	-1147	{ II Kings Chapter 9 }	1425 1811
+2833	       May  7	-1592	{ II Kings Chapter 11 }	1781 1052
+3559	       May  8	-1311	{ II Kings Chapter 14 }	1018 1208 1333
+2681	       May  9	-1908	{ II Kings Chapter 16 }	1671 1010
+3748	       May 10	-1438	{ II Kings Chapter 18 }	1873 1875
+3827	       May 11	-889	{ II Kings Chapter 21 }	1721 1002 1104
+3236	       May 12	-932	{ II Kings Chapter 23 }	1035 2201
+3756	       May 13	-454	{ I Chronicles Chapter 1 }	941 1484 1331
+3802	       May 14	69	{ I Chronicles Chapter 4 }	1575 738 1489
+3392	       May 15	183	{ I Chronicles Chapter 6 }	1084 2308
+2429	       May 16	-665	{ I Chronicles Chapter 8 }	1476 953
+3772	       May 17	-171	{ I Chronicles Chapter 11 }	1645 568 1559
+2747	       May 18	-702	{ I Chronicles Chapter 14 }	1571 581 595
+3636	       May 19	-344	{ I Chronicles Chapter 17 }	1198 1324 1114
+3488	       May 20	-134	{ I Chronicles Chapter 21 }	710 979 435 1364
+2972	       May 21	-440	{ I Chronicles Chapter 24 }	897 1106 969
+3513	       May 22	-205	{ I Chronicles Chapter 27 }	956 1249 1308
+3597	       May 23	113	{ II Chronicles Chapter 1 }	1268 1494 835
+3299	       May 24	134	{ II Chronicles Chapter 5 }	971 720 876 732
+3107	       May 25	-36	{ II Chronicles Chapter 7 }	1998 1109
+3033	       May 26	-281	{ II Chronicles Chapter 10 }	857 1336 840
+3290	       May 27	-269	{ II Chronicles Chapter 14 }	811 772 1023 684
+3863	       May 28	315	{ II Chronicles Chapter 18 }	766 718 767 1612
+3329	       May 29	366	{ II Chronicles Chapter 21 }	552 1802 975
+3287	       May 30	375	{ II Chronicles Chapter 24 }	708 1171 1408
+2989	       May 31	86	{ II Chronicles Chapter 27 }	1479 1133 377
+3179	      June  1	-12	{ II Chronicles Chapter 29 }	1389 1790
+2581	      June  2	-710	{ II Chronicles Chapter 31 }	1372 1209
+2840	      June  3	-1148	{ II Chronicles Chapter 33 }	1682 1158
+3268	      June  4	-1158	{ II Chronicles Chapter 35 }	1825 1443
+3446	      June  5	-990	{ Ezra Chapter 2 }	1132 569 1745
+2931	      June  6	-1337	{ Ezra Chapter 5 }	840 1212 879
+4077	      June  7	-538	{ Ezra Chapter 8 }	1184 1319 1574
+3213	      June  8	-603	{ Nehemiah Chapter 1 }	937 1669 607
+3596	      June  9	-285	{ Nehemiah Chapter 4 }	1059 1477 1060
+3884	      June 10	320	{ Nehemiah Chapter 7 }	962 900 2022
+3113	      June 11	155	{ Nehemiah Chapter 9 }	1055 2058
+2536	      June 12	-586	{ Nehemiah Chapter 11 }	1148 1388
+3256	      June 13	-608	{ Nehemiah Chapter 13 }	1766 1490
+3235	      June 14	-651	{ Esther Chapter 3 }	1124 1249 862
+3772	      June 15	-157	{ Esther Chapter 8 }	801 720 711 535 1005
+3162	      June 16	-273	{ Job Chapter 2 }	1500 153 939 570
+3137	      June 17	-414	{ Job Chapter 7 }	622 520 669 743 583
+3053	      June 18	-639	{ Job Chapter 12 }	509 820 601 506 617
+3072	      June 19	-845	{ Job Chapter 17 }	645 596 873 563 395
+3468	      June 20	-655	{ Job Chapter 22 }	496 694 753 790 735
+3378	      June 21	-555	{ Job Chapter 29 }	415 707 139 320 556 680 561
+3168	      June 22	-666	{ Job Chapter 33 }	766 1006 588 808
+3728	      June 23	-216	{ Job Chapter 38 }	958 405 793 602 970
+3228	      June 24	-266	{ Psalms Chapter 2 }	720 555 766 666 208 313
+3115	      June 25	-429	{ Psalms Chapter 10 }	241 275 400 276 543 268 578 534
+3301	      June 26	-406	{ Psalms Chapter 18 }	224 252 188 248 177 323 455 1434
+3239	      June 27	-445	{ Psalms Chapter 26 }	444 239 382 862 191 294 531 296
+3138	      June 28	-585	{ Psalms Chapter 33 }	507 315 293 361 757 380 525
+3406	      June 29	-457	{ Psalms Chapter 38 }	554 860 375 1053 564
+3367	      June 30	-368	{ Psalms Chapter 45 }	440 636 407 440 201 684 559
+3297	      July  1	-349	{ Psalms Chapter 53 }	337 251 375 540 643 566 322 263
+3191	      July  2	-436	{ Psalms Chapter 61 }	218 689 375 394 350 547 389 229
+3259	      July  3	-455	{ Psalms Chapter 68 }	397 304 305 446 508 188 1111
+3152	      July  4	-581	{ Psalms Chapter 73 }	1029 187 714 556 666
+3647	      July  5	-212	{ Psalms Chapter 78 }	666 302 311 528 1840
+3247	      July  6	-243	{ Psalms Chapter 86 }	441 506 454 198 456 358 343 491
+2953	      July  7	-568	{ Psalms Chapter 91 }	196 495 1339 500 423
+2989	      July  8	-857	{ Psalms Chapter 101 }	404 156 562 280 347 311 263 260 149 257
+3070	      July  9	-1065	{ Psalms Chapter 105 }	697 553 871 949
+3432	      July 10	-911	{ Psalms Chapter 109 }	1205 1058 342 827
+2743	      July 11	-1446	{ Psalms Chapter 118 }	213 287 292 208 175 393 431 59 685
+3994	      July 12	-731	{ Psalms Chapter 119 }	3994
+3172	      July 13	-837	{ Psalms Chapter 135 }	151 173 216 155 177 178 156 174 160 193 190 110 432 127 77 503
+3562	      July 14	-553	{ Psalms Chapter 144 }	577 264 255 636 398 315 249 399 469
+3219	      July 15	-612	{ Proverbs Chapter 2 }	516 273 468 313 219 140 804 486
+3437	      July 16	-453	{ Proverbs Chapter 7 }	814 629 523 859 612
+2969	      July 17	-762	{ Proverbs Chapter 11 }	866 436 817 850
+3124	      July 18	-916	{ Proverbs Chapter 15 }	732 647 884 861
+2989	      July 19	-1205	{ Proverbs Chapter 19 }	836 761 604 788
+3122	      July 20	-1361	{ Proverbs Chapter 23 }	767 797 712 846
+3061	      July 21	-1578	{ Proverbs Chapter 27 }	877 776 693 715
+3158	      July 22	-1698	{ Proverbs Chapter 31 }	807 683 944 724
+3033	      July 23	-1943	{ Ecclesiastes Chapter 4 }	618 1094 734 587
+3690	      July 24	-1531	{ Ecclesiastes Chapter 9 }	780 447 912 748 803
+3616	      July 25	-1193	{ Song of Solomon Chapter 4 }	617 397 552 515 536 431 568
+3243	      July 26	-1228	{ Isaiah Chapter 1 }	607 469 433 534 1200
+3293	      July 27	-1213	{ Isaiah Chapter 5 }	836 891 309 1257
+3340	      July 28	-1151	{ Isaiah Chapter 9 }	533 1027 876 904
+3169	      July 29	-1260	{ Isaiah Chapter 13 }	1364 729 209 867
+3291	      July 30	-1247	{ Isaiah Chapter 18 }	1230 412 635 628 386
+3056	      July 31	-1469	{ Isaiah Chapter 22 }	1084 287 684 1001
+3569	    August  1	-1179	{ Isaiah Chapter 27 }	731 910 528 819 581
+3821	    August  2	-636	{ Isaiah Chapter 30 }	1203 1091 1527
+3259	    August  3	-655	{ Isaiah Chapter 35 }	477 677 924 761 420
+3639	    August  4	-294	{ Isaiah Chapter 38 }	1071 1710 858
+2832	    August  5	-740	{ Isaiah Chapter 41 }	424 1211 1197
+3414	    August  6	-604	{ Isaiah Chapter 44 }	984 1054 1376
+3350	    August  7	-532	{ Isaiah Chapter 48 }	1154 536 729 931
+3559	    August  8	-251	{ Isaiah Chapter 52 }	1259 551 1123 626
+3293	    August  9	-236	{ Isaiah Chapter 57 }	573 741 577 543 859
+3262	    August 10	-252	{ Isaiah Chapter 61 }	765 924 997 576
+2945	    August 11	-585	{ Isaiah Chapter 65 }	534 825 484 1102
+3524	    August 12	-339	{ Jeremiah Chapter 2 }	1191 803 1530
+3841	    August 13	223	{ Jeremiah Chapter 5 }	1228 1321 1292
+3750	    August 14	695	{ Jeremiah Chapter 8 }	1287 1413 1050
+3267	    August 15	684	{ Jeremiah Chapter 11 }	1166 996 1105
+2963	    August 16	369	{ Jeremiah Chapter 14 }	809 1112 1042
+3283	    August 17	374	{ Jeremiah Chapter 17 }	1027 1014 1242
+3398	    August 18	494	{ Jeremiah Chapter 21 }	975 782 893 748
+3030	    August 19	246	{ Jeremiah Chapter 23 }	1272 1758
+3387	    August 20	355	{ Jeremiah Chapter 26 }	539 1690 1158
+3505	    August 21	582	{ Jeremiah Chapter 29 }	1131 824 1550
+2951	    August 22	254	{ Jeremiah Chapter 31 }	1065 1886
+3367	    August 23	343	{ Jeremiah Chapter 33 }	2117 1250
+3891	    August 24	956	{ Jeremiah Chapter 36 }	1246 1000 1645
+3331	    August 25	1009	{ Jeremiah Chapter 39 }	986 1476 869
+3186	    August 26	917	{ Jeremiah Chapter 42 }	1060 1023 1103
+2753	    August 27	392	{ Jeremiah Chapter 45 }	693 1827 233
+3398	    August 28	512	{ Jeremiah Chapter 48 }	1273 339 1786
+4033	    August 29	1267	{ Jeremiah Chapter 50 }	1817 2216
+2796	    August 30	785	{ Jeremiah Chapter 51 }	2796
+2828	    August 31	335	{ Lamentations Chapter 1 }	1626 1202
+3475	 September  1	532	{ Lamentations Chapter 4 }	1264 1306 905
+3351	 September  2	605	{ Ezekiel Chapter 3 }	480 1274 423 1174
+3536	 September  3	863	{ Ezekiel Chapter 7 }	782 906 694 1154
+3568	 September  4	1153	{ Ezekiel Chapter 11 }	966 599 955 1048
+3299	 September  5	1174	{ Ezekiel Chapter 14 }	1145 1068 1086
+3087	 September  6	983	{ Ezekiel Chapter 16 }	295 2792
+3058	 September  7	763	{ Ezekiel Chapter 19 }	1116 1426 516
+3699	 September  8	1184	{ Ezekiel Chapter 21 }	2302 1397
+3330	 September  9	1236	{ Ezekiel Chapter 23 }	1251 2079
+2862	 September 10	820	{ Ezekiel Chapter 26 }	1078 773 1011
+2545	 September 11	86	{ Ezekiel Chapter 28 }	1380 1165
+3045	 September 12	-146	{ Ezekiel Chapter 31 }	1028 1078 939
+3051	 September 13	-373	{ Ezekiel Chapter 33 }	1500 1551
+3627	 September 14	-24	{ Ezekiel Chapter 36 }	1325 589 1713
+3688	 September 15	385	{ Ezekiel Chapter 39 }	1270 1106 1312
+3385	 September 16	492	{ Ezekiel Chapter 41 }	2217 1168
+3725	 September 17	939	{ Ezekiel Chapter 44 }	856 1317 1552
+2565	 September 18	226	{ Ezekiel Chapter 46 }	1318 1247
+3647	 September 19	595	{ Daniel Chapter 1 }	1169 1560 918
+3884	 September 20	1201	{ Daniel Chapter 3 }	2264 1620
+3449	 September 21	1372	{ Daniel Chapter 5 }	1924 1525
+2729	 September 22	823	{ Daniel Chapter 7 }	1402 1327
+2761	 September 23	306	{ Daniel Chapter 9 }	1248 1513
+3153	 September 24	181	{ Daniel Chapter 11 }	925 2228
+3058	 September 25	-38	{ Hosea Chapter 4 }	583 536 959 244 736
+2780	 September 26	-536	{ Hosea Chapter 9 }	566 384 606 510 714
+3367	 September 27	-447	{ Joel Chapter 1 }	659 458 502 619 353 776
+3633	 September 28	-92	{ Amos Chapter 2 }	1395 861 724 653
+3535	 September 29	164	{ Amos Chapter 7 }	588 665 971 589 722
+3130	 September 30	16	{ Jonah Chapter 1 }	591 762 1014 763
+3061	   October  1	-201	{ Micah Chapter 3 }	319 401 490 723 607 521
+3465	   October  2	-14	{ Nahum Chapter 1 }	680 642 667 866 610
+2873	   October  3	-419	{ Habakkuk Chapter 2 }	550 795 683 845
+3174	   October  4	-523	{ Zephaniah Chapter 3 }	744 803 737 890
+3465	   October  5	-336	{ Zechariah Chapter 3 }	662 970 926 471 436
+3149	   October  6	-465	{ Zechariah Chapter 8 }	542 483 610 559 955
+3284	   October  7	-459	{ Zechariah Chapter 13 }	793 573 725 725 468
+3518	   October  8	-219	{ Malachi Chapter 3 }	1089 753 835 841
+3491	   October  9	-6	{ Matthew Chapter 4 }	267 833 924 597 870
+3738	   October 10	453	{ Matthew Chapter 7 }	1617 1208 913
+3892	   October 11	1067	{ Matthew Chapter 10 }	1207 1300 1385
+2761	   October 12	550	{ Matthew Chapter 12 }	1023 1738
+3155	   October 13	427	{ Matthew Chapter 14 }	2053 1102
+3234	   October 14	383	{ Matthew Chapter 17 }	1232 1039 963
+3583	   October 15	688	{ Matthew Chapter 20 }	1286 1129 1168
+3005	   October 16	415	{ Matthew Chapter 22 }	1713 1292
+2901	   October 17	38	{ Matthew Chapter 24 }	1363 1538
+3936	   October 18	696	{ Matthew Chapter 26 }	1490 2446
+2725	   October 19	143	{ Matthew Chapter 28 }	2071 654
+3545	   October 20	410	{ Mark Chapter 3 }	1451 1062 1032
+2759	   October 21	-108	{ Mark Chapter 5 }	1355 1404
+3225	   October 22	-162	{ Mark Chapter 7 }	1974 1251
+3009	   October 23	-431	{ Mark Chapter 9 }	1280 1729
+3025	   October 24	-684	{ Mark Chapter 11 }	1857 1168
+2827	   October 25	-1135	{ Mark Chapter 13 }	1610 1217
+3784	   October 26	-629	{ Mark Chapter 15 }	2362 1422
+3030	   October 27	-877	{ Luke Chapter 1 }	679 2351
+3097	   October 28	-1058	{ Luke Chapter 3 }	1622 1475
+2972	   October 29	-1364	{ Luke Chapter 5 }	1542 1430
+3607	   October 30	-1035	{ Luke Chapter 7 }	1783 1824
+4300	   October 31	-13	{ Luke Chapter 9 }	2116 2184
+3513	  November  1	221	{ Luke Chapter 11 }	1517 1996
+3374	  November  2	317	{ Luke Chapter 13 }	2064 1310
+3431	  November  3	470	{ Luke Chapter 16 }	1189 1066 1176
+2547	  November  4	-260	{ Luke Chapter 18 }	1210 1337
+2995	  November  5	-543	{ Luke Chapter 20 }	1535 1460
+3287	  November  6	-534	{ Luke Chapter 22 }	1181 2106
+3321	  November  7	-491	{ Luke Chapter 24 }	1745 1576
+3517	  November  8	-252	{ John Chapter 3 }	1557 777 1183
+3199	  November  9	-331	{ John Chapter 5 }	1695 1504
+3751	  November 10	141	{ John Chapter 7 }	2249 1502
+3219	  November 11	81	{ John Chapter 9 }	1944 1275
+2955	  November 12	-241	{ John Chapter 11 }	1210 1745
+2848	  November 13	-671	{ John Chapter 13 }	1587 1261
+3111	  November 14	-838	{ John Chapter 16 }	1069 876 1166
+3880	  November 15	-236	{ John Chapter 19 }	871 1457 1552
+3272	  November 16	-242	{ Acts Chapter 1 }	1145 1079 1048
+2481	  November 17	-1039	{ Acts Chapter 3 }	1546 935
+3366	  November 18	-951	{ Acts Chapter 6 }	1277 1505 584
+3468	  November 19	-761	{ Acts Chapter 8 }	2089 1379
+3239	  November 20	-800	{ Acts Chapter 10 }	1562 1677
+3953	  November 21	-125	{ Acts Chapter 13 }	1022 997 1934
+3889	  November 22	485	{ Acts Chapter 16 }	981 1454 1454
+3924	  November 23	1131	{ Acts Chapter 19 }	1334 1060 1530
+2981	  November 24	834	{ Acts Chapter 21 }	1360 1621
+3521	  November 25	1077	{ Acts Chapter 24 }	1148 1369 1004
+3864	  November 26	1663	{ Acts Chapter 27 }	1118 1199 1547
+3348	  November 27	1733	{ Romans Chapter 2 }	1219 1159 970
+3227	  November 28	1682	{ Romans Chapter 6 }	870 870 739 748
+3331	  November 29	1735	{ Romans Chapter 9 }	868 1361 1102
+3205	  November 30	1662	{ Romans Chapter 13 }	694 1252 685 574
+2815	  December  1	1198	{ Romans Chapter 16 }	813 1140 862
+3007	  December  2	927	{ I Corinthians Chapter 4 }	968 559 733 747
+3165	  December  3	814	{ I Corinthians Chapter 8 }	518 727 1461 459
+3096	  December  4	632	{ I Corinthians Chapter 11 }	987 1022 1087
+2814	  December  5	168	{ I Corinthians Chapter 14 }	973 442 1399
+3378	  December  6	268	{ II Corinthians Chapter 1 }	1756 696 926
+3195	  December  7	185	{ II Corinthians Chapter 6 }	598 623 621 754 599
+2887	  December  8	-205	{ II Corinthians Chapter 10 }	722 877 598 690
+3269	  December  9	-214	{ Galatians Chapter 1 }	1148 921 488 712
+2807	  December 10	-685	{ Galatians Chapter 4 }	888 982 937
+3386	  December 11	-577	{ Ephesians Chapter 3 }	746 562 777 685 616
+3562	  December 12	-293	{ Philippians Chapter 1 }	987 893 734 948
+3456	  December 13	-115	{ Colossians Chapter 1 }	921 761 777 997
+3292	  December 14	-101	{ I Thessalonians Chapter 2 }	787 749 595 407 754
+3307	  December 15	-72	{ II Thessalonians Chapter 3 }	457 599 666 458 586 541
+2975	  December 16	-375	{ I Timothy Chapter 5 }	736 426 514 523 776
+3491	  December 17	-162	{ II Timothy Chapter 4 }	769 677 812 537 696
+3465	  December 18	24	{ Hebrews Chapter 2 }	577 457 512 703 515 701
+3275	  December 19	21	{ Hebrews Chapter 7 }	555 590 475 674 981
+2855	  December 20	-401	{ Hebrews Chapter 10 }	572 1061 1222
+3287	  December 21	-393	{ Hebrews Chapter 13 }	1412 1076 799
+3578	  December 22	-93	{ James Chapter 5 }	858 790 611 580 739
+3456	  December 23	84	{ I Peter Chapter 4 }	965 902 860 729
+3319	  December 24	125	{ I John Chapter 1 }	511 769 930 749 360
+3396	  December 25	243	{ I John Chapter 5 }	1104 830 708 754
+2836	  December 26	-198	{ Revelation of John Chapter 1 }	465 469 1013 889
+3261	  December 27	-215	{ Revelation of John Chapter 5 }	1189 939 500 633
+3381	  December 28	-112	{ Revelation of John Chapter 10 }	746 723 571 834 507
+3254	  December 29	-136	{ Revelation of John Chapter 14 }	857 716 752 929
+3136	  December 30	-278	{ Revelation of John Chapter 18 }	385 826 785 1140
+3557	  December 31	0	{ Revelation of John Chapter 22 }	920 669 1132 836

@@ -64,15 +64,6 @@ AS/OF:	2005
 NOTE:	No .lrc at all but rather a scripture reading mode for Emacs
 
 
-# Optional Yearly Reading Plan
-
-The header line of each .lrc file assigns a date which will read the
-whole bible cover to cover in a year.  Of course this can be simply
-ignored when not reading by this plan.  If used, this schedule aims
-for minimum range and standard deviation of the reading syllables per
-day.  See yearplan.png for a graphical view of this reading plan.
-
-
 # EMACS
 
 If you use emacs, copy site-lisp/kjv-mode.el to any directory on your
@@ -89,6 +80,19 @@ symlink the directory of your *.mp3 to ~/.kjv, something like:
 
 then copy bin/kjvmp3 to your $PATH for audio playback in emacs.  This
 feature requires mplayer to be installed on $PATH.
+
+
+# Optional Yearly Reading Schedule
+
+The header line of each .lrc file shows a date.  If all chapters are
+read on these dates, this will read the whole bible from cover to
+cover in a year.  Of course this date can simply be ignored when not
+reading by this plan.
+
+If used, this schedule aims for minimum range and standard deviation
+of the reading syllables per day.  See yearplan.png for a graphical
+view of this reading schedule.  See bookmarks.ps for this schedule in
+bookmark format suitable for printing (try "make print").
 
 
 # Thoughts on .mp3 Bible Chapter METADATA
@@ -140,7 +144,8 @@ and chapter, see kjv-syb.txt
 
 3. bin/kjvmp3 -r is used to generate a 365 day reading schedule aiming
 for similar syllables per day while breaking only between chapters,
-see yearplan.txt.
+see yearplan.txt.  This is then manually tweaked to perfection by
+bin/kjvpng which keeps track of best plan ever found.
 
 4. bin/kjvmp3 -a is used to annotate the reading schedule into the
 chapter headers, see kjv.txt
