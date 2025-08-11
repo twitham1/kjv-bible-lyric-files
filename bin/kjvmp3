@@ -108,10 +108,12 @@ sub play {
 # of the audio to each line.  Initialy I measured bytes, then improved
 # to words, and finally to syllables.
 
+my %seen;
 sub len {			# return the length of the text
     my $syb = my $word = my $num = 0;
     my $chap;
     for my $line (@_) {
+	warn $line if $line =~ /^(\*\*.*Chapter)/ and !$seen{$1}++;
 
 	my $len = 0;
 	$line =~ /^((\S+ \d+):\d+:)?\s*(.*)/; # ignore chapter/verse leader
@@ -121,9 +123,9 @@ sub len {			# return the length of the text
 	$text =~ s/^\W+//;
 	my $words = split /\W+/, $text;
 
-	$text =~ s/([;:,])/ PAUSE /g; # punctuation pauses
+	$text =~ s/[;:,]/ PAUSE /g; # punctuation pauses
 
-	$text =~ s/([{}?.])/ STOP STOP /g; # sentence pauses
+	$text =~ s/[\}?!.]/ STOP STOP /g; # sentence pauses
 
 	$text =~ s/\W+/ /g; # strip italics and quotes and break hyphens
 
@@ -141,8 +143,8 @@ sub len {			# return the length of the text
 	$word += $words;
 	$num++;
     }
-    print qq'$word\t$syb\t$chap\t\t*** ($syb syllables, ',
-	qq'$word words, $num lines)\n';
+    print "$word\t$syb\t$chap\t\t*** ($syb syllables, ",
+	"$word words, $num lines)\n";
     return $syb;
 }
 
@@ -178,6 +180,30 @@ sub measure {
     return 1;
 }
 
+sub replace_file {	      # replace a file only if content changed
+    my($src, $dst) = @_;
+    $src and $dst and -f $src or
+	warn "source file $src must exist and destination given"
+	and return 0;
+    my $fh; local $_;
+    my $before = '';
+    if (-f $dst and open $fh, $dst)  {
+	$before .= $_ while (<$fh>);
+	close $fh or die $!;
+    }
+    my $after = '';
+    open $fh, $src or die "can't read $src: $!\n";
+    $after .= $_ while (<$fh>);
+    close $fh or die $!;
+
+    $before eq $after and return 1;
+
+    open $fh, '>', $dst or die "can't write $dst: $!\n";
+    print $fh $after;
+    close $fh or die $!;
+    return 1;
+}
+
 # See https://en.wikipedia.org/wiki/LRC_(file_format)
 sub lyric {
     my($lineref) = @_;
@@ -205,7 +231,7 @@ sub lyric {
 				$next{"$book Chapter $chap"});
     my $per = $duration / $len;	# seconds per reading syllable of text
     my $t = 0;
-    open OUT, '>:encoding(UTF-8)', ($opt{n} ? '/dev/null' : $out)
+    open OUT, '>:encoding(UTF-8)', ($opt{n} ? '/dev/null' : "$out~")
 	or die $!;
     for my $line (@$lineref) {
 	my $min = int($t / 60);
@@ -217,6 +243,8 @@ sub lyric {
 	print "$len\t$this" if $opt{verbose};
 	$t += $len * $per;
     }
+    close OUT or die $!;
+    $opt{n} or (replace_file("$out~", $out) and unlink "$out~");
     printf "%4d seconds in %4d lines @ %5.2f syllable/s in $out\n",
 	$duration, scalar @$lineref, $len / $duration;
     return 1;
@@ -253,13 +281,13 @@ sub readplan {		  # generate reading schedule from kjv-syb.tmp
     } else {		 # find goal factor that yields minimum stddev
 	my $min = 99999;
 	open FILE, '>', $file or die "can't write $file: $!";
-	print "finding chapter breaks of minimum stddev for $opt{read} days\n";
+	warn "finding chapter breaks of minimum stddev for $opt{read} days\n";
 	for (my $try = 0; $try < 0.25; $try += 0.01) {
 	    my $stddev = &tryplan($try, 1);
 	    my $found = '';
 	    $min = $stddev and $good = $try and $found = "\t<<<<<"
 		if $stddev < $min;
-	    print "$try\t$stddev$found\n";
+	    warn "$try\t$stddev$found\n";
 	}
 	my $zero = &tryplan(0, 1); # aim for mean syllables only
 	my $one = &tryplan(1, 1);  # aim for nearest break only

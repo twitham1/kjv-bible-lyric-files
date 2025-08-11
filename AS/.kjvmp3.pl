@@ -28,6 +28,9 @@ return {
 	# warn "config $sec $chap $next\n";
 	
 	# book closing statement runs longer past the text
-	return $next =~ /^$book / ? $sec - 2 : $sec - 7;
+	$next =~ /^$book / or return $sec - 7;
+
+	# 2 second silent tail
+	return $sec - 2;
     },
 };

@@ -5,13 +5,13 @@ SOURCE:	https://github.com/twitham1/kjv-bible-lyric-files
 The King James Holy Bible in 1189 Lyric format files (*.lrc)
 
 This code generates LRC text files to sit alongside KJV audio files
-for scripture display while corresponding sound plays in your favorite
+for scripture display while corresponding audio plays in your favorite
 player.  I use MythMusic of MythTV.  Other options might be found at:
 
 https://en.wikipedia.org/wiki/LRC_(file_format)#Support
 
 Grab a release file from github to get a full set of .lrc files for
-your .mp3 files, see INSTALL options below.
+compatible .mp3 files, see INSTALL options below.
 
 These .lrc files distribute the time of the audio recording across the
 "reading syllables" of the text.  This yields a display within a line
@@ -21,8 +21,8 @@ recommended.
 
 "Reading syllables" are the syllables of the words plus:
 
-* two syllables before and after chapter headers: { }
-* two syllables for sentence ending punctuation: . ?
+* two syllables for a chapter header: { }
+* two syllables for sentence ending punctuation: . ? !
 * one syllable for pause punctuation: , ; :
 * one syllable for blank line paragraph separator
 
@@ -33,7 +33,7 @@ This yields a better timing than bytes, words or lines.
 
 Simply copy the DIR/*.lrc files to the location of matching *.mp3
 files.  Or, copy those matching *.mp3 to the given DIR here.  AS/OF
-the given dates, these options worked for me.
+the given dates, these options worked for me, YMMV.
 
 DIR:	AS/
 ARTIST:	Alexander Scourby
@@ -60,8 +60,17 @@ DIR:	emacs/
 ARTIST:	Timothy D Witham
 YEAR:	2005
 SOURCE:	./site-lisp/kjv-mode.el ./bin/kjvmp3
-AS/OF:	2025
+AS/OF:	2005
 NOTE:	No .lrc at all but rather a scripture reading mode for Emacs
+
+
+# Optional Yearly Reading Plan
+
+The header line of each .lrc file assigns a date which will read the
+whole bible cover to cover in a year.  Of course this can be simply
+ignored when not reading by this plan.  If used, this schedule aims
+for minimum range and standard deviation of the reading syllables per
+day.  See yearplan.png for a graphical view of this reading plan.
 
 
 # EMACS
@@ -78,7 +87,8 @@ symlink the directory of your *.mp3 to ~/.kjv, something like:
 
 	ln -s /usr/local/share/doc/KJV/AS ~/.kjv
 
-then copy bin/kjvmp3 to your $PATH for audio playback in emacs.
+then copy bin/kjvmp3 to your $PATH for audio playback in emacs.  This
+feature requires mplayer to be installed on $PATH.
 
 
 # Thoughts on .mp3 Bible Chapter METADATA
@@ -104,8 +114,8 @@ Discs and split them in half as follows:
 * Proverbs 1-31 stay on Disc 20 but move to Track 61-91
 
 This way everything is in order and in 66 Discs matching 66 books,
-with the above exceptions in only 2 books.  Psalms chapters on Disc 20
-are 90 more than their track number while Proverbs are 60 less.
+with the above exceptions in only 2 books.  Psalms on Disc 20 are 90
+more than their track number while Proverbs are 60 less.
 
 
 # HOW TO [RE]GENERATE .lrc files for .mp3 files
@@ -117,7 +127,7 @@ be re-run against new .mp3 content.  This will require:
 * the SWORD project and its diatheke command
 * perl to run my code in bin/
 * exiftool to measure .mp3 audio length
-* make to fully automate the process from my Makefile
+* make to fully automate the process from my Makefiles
 
 See Makefile to see the details of how the files are generated:
 
