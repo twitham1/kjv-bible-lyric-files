@@ -164,16 +164,16 @@ sub lyrics {
     }
     $next{$last} = 'The End';
     seek FILE, 0, 0;		# start over
-    # my $search = 'I Samuel Chapter 14'; # search hack!!!
+    my $search = $ARGV[0] || undef; # search for given chapter?
     while (<FILE>) {
-	# m/$search/ and $search = 0; # search hack!!!
-	# $search and next;	    # search hack!!!
+	$search and m/$search/ and $search = 0;
+	$search and next;
 	next if / mode: kjv /;	# skip header
 	s/\(KJV\)//;		# skip footer
 	if (@line > 5 and /\{ (The Book of .+|.+ Chapter \d+) \}/) {
 	    &lyric(\@line);
 	    @line = ();
-	    # last;		# if using search hack above!!!
+	    defined $search and last; # just one for search
 	}
 	push @line, $_;
     }
