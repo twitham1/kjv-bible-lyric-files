@@ -31,6 +31,8 @@ my $def = {
 	my($sec, $chap, $next) = @_;
 	return $sec - 3;	# skip 3 seconds of end silence
     },
+    # file to read for text/audio syncronization points
+    syncfile => $cfile,
 };
 my $cfg = require $cfile if -f $cfile; # must return a config hash
 my $conf = {};			       # cfg || def configuration
@@ -150,6 +152,7 @@ sub len {			# return the length of the text
 
 my %next;			# {chapter} = next chapter
 sub lyrics {
+    &readsyncs;			# optional text/audio sync points
     my @line;
     open FILE, '<:encoding(UTF-8)', $opt{file} or die "$opt{file}: $!";
     my $last = '';
@@ -161,12 +164,16 @@ sub lyrics {
     }
     $next{$last} = 'The End';
     seek FILE, 0, 0;		# start over
+    # my $search = 'I Samuel Chapter 14'; # search hack!!!
     while (<FILE>) {
+	# m/$search/ and $search = 0; # search hack!!!
+	# $search and next;	    # search hack!!!
 	next if / mode: kjv /;	# skip header
 	s/\(KJV\)//;		# skip footer
 	if (@line > 5 and /\{ (The Book of .+|.+ Chapter \d+) \}/) {
 	    &lyric(\@line);
 	    @line = ();
+	    # last;		# if using search hack above!!!
 	}
 	push @line, $_;
     }
@@ -204,6 +211,45 @@ sub replace_file {	      # replace a file only if content changed
     return 1;
 }
 
+sub readsyncs {			# read optional text/audio sync points
+    my $syncs = {};
+    if (open my $fh, $conf->{syncfile}) {
+	my $book;
+	while (<$fh>) {
+	    s/\s*#.*//;
+	    m/^(\w+)$/ and $book = $1;
+	    m/^__END__$/ and $syncs = {}; # start over
+	    m/(\d+):(\d+)\s+(\d+):(\d+)/
+		and $syncs->{"$book $1"}{$2}{sec} = $3 * 60 + $4;
+	}
+	close $fh or die $!;
+    }
+    $conf->{syncs} = $syncs;
+}
+
+sub rates {			# find rate per sync section
+    my($abbr, $syb, $dur, $lineref) = @_;
+    my $s = $conf->{syncs}{$abbr};
+    $s->{0} = {sec => 0, syb => 0};	     # beginning second
+    $s->{9999} = {sec => $dur, syb => $syb}; # last second
+    my $prev = my $verse = my $syllables = 0;
+    for my $line (@$lineref) {
+	my($words, $sybs, $v) = split "\t", $line;
+	if (($line =~ m/syllables,/ and $verse = 9999
+	     or $v =~ m/.*\d+:(\d+):/ and $verse = $1)
+	    and defined $s->{$verse}) {
+	    $s->{$verse}{syb} = 0; # sybs past this point
+	    $s->{$prev}{per} = $syllables /
+		($s->{$verse}{sec} - $s->{$prev}{sec});
+	    $prev = $verse;
+	    $syllables = 0;	# sybs per section
+	}
+	$syllables += $sybs;
+	$s->{$prev}{syb} += $sybs;
+    }
+    return $s;
+}
+
 # See https://en.wikipedia.org/wiki/LRC_(file_format)
 sub lyric {
     my($lineref) = @_;
@@ -219,7 +265,7 @@ sub lyric {
 
     # input file must be pre measured by now
     my $tail = (grep { /syllables/ } @$lineref)[0] or return;
-    my($words, $len) = split "\t", $tail or return;
+    my($words, $len, $abbr) = split "\t", $tail or return;
     $len or return;
 
     chomp(my $duration = `exiftool -duration '$file'`);
@@ -229,24 +275,34 @@ sub lyric {
     $duration = ($h || 0) * 3600 + ($m || 0) * 60 + $s;
     $duration = $conf->{length}($duration, "$book Chapter $chap",
 				$next{"$book Chapter $chap"});
-    my $per = $duration / $len;	# seconds per reading syllable of text
-    my $t = 0;
+
+    my $rate = rates($abbr, $len, $duration, $lineref);
+    my $num = keys(%$rate) - 2;	# syncs
+
+    my $t = my $verse = 0;	# verse that starts rate section
+    my @rate = (sprintf('%.2f', $rate->{0}{per})); # rates used
     open OUT, '>:encoding(UTF-8)', ($opt{n} ? '/dev/null' : "$out~")
 	or die $!;
     for my $line (@$lineref) {
+	$line =~ m/.*\d+:(\d+):/
+	    and (defined $rate->{$1})
+	    and $verse = $1
+	    and push @rate, sprintf('%.2f', $rate->{$1}{per})
+	    and $line =~ s/:(\d+):/.$1./;
+	$line =~ s/^(\d+)\t(\d+)\t// or next; # words, syllables
+	my $sybs = $2;			      # syllables
+	$num and $line =~ s/( syllables,.*)./$1, $num syncs)/;
 	my $min = int($t / 60);
 	my $sec = $t - $min * 60;
-	$line =~ s/^(\d+)\t(\d+)\t// or next; # words, syllables
-	my $len = $2;			      # syllables
 	my $this = sprintf "[%02d:%05.02f]$line", $min, $sec;
 	print OUT $this;
-	print "$len\t$this" if $opt{verbose};
-	$t += $len * $per;
+	print "$sybs\t$rate->{$verse}{per}\t$this" if $opt{verbose};
+	$t += $sybs / $rate->{$verse}{per};
     }
     close OUT or die $!;
     $opt{n} or (replace_file("$out~", $out) and unlink "$out~");
-    printf "%4d seconds in %4d lines @ %5.2f syllable/s in $out\n",
-	$duration, scalar @$lineref, $len / $duration;
+    printf "%4d secs in %4d lines in $out, syb/s: @rate\n",
+	$duration, scalar @$lineref;
     return 1;
 }
 

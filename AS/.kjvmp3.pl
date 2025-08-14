@@ -34,3 +34,20 @@ return {
 	return $sec - 2;
     },
 };
+
+# optional text/audio sync points follow in format:
+# AbbreviatedBook
+# Chapter:Verse Minutes:Seconds
+__END__
+1Sam
+14:4 0:31
+14:19 2:47
+14:24 3:32
+14:33 4:54
+14:36 5:29
+14:47 7:21
+15:6 0:42
+15:10 1:25
+15:20 2:56
+15:24 3:44
+15:32 4:58
