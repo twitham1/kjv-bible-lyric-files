@@ -13,15 +13,16 @@ https://en.wikipedia.org/wiki/LRC_(file_format)#Support
 Grab a release file from github to get a full set of .lrc files for
 compatible .mp3 files, see INSTALL options below.
 
-These .lrc files distribute the time of the audio recording across the
-"reading syllables" of the text.  This yields a display within a line
-or two of the sound most of the time.  The sound and text occasionally
-drift by up to 5 lines so displaying 11 or more lines of context is
-recommended.
+Text to audio synchronization is not perfect.  Rather, the time of the
+audio recording is automatically distributed across the "reading
+syllables" of the text.  This yields a display within a line or two of
+the sound most of the time.  Displaying 1 line at a time will not
+work.  The sound and text occasionally drift by up to +/- 5 lines so
+displaying 11 or more lines of context is recommended.
 
 "Reading syllables" are the syllables of the words plus:
 
-* two syllables for a chapter header: { }
+* two syllables around a chapter header: { }
 * two syllables for sentence ending punctuation: . ? !
 * one syllable for pause punctuation: , ; :
 * one syllable for blank line paragraph separator
@@ -74,12 +75,12 @@ emacs load-path and add something like this to ~/.emacs
 Now M-x find-file on ./kjv.txt should invoke kjv-mode for reading the
 Bible in emacs.  See C-h m for mode documentation.
 
-symlink the directory of your *.mp3 to ~/.kjv, something like:
+Symlink the directory of your *.mp3 to ~/.kjv, something like:
 
 	ln -s /usr/local/share/doc/KJV/AS ~/.kjv
 
 then copy bin/kjvmp3 to your $PATH for audio playback in emacs.  This
-feature requires mplayer to be installed on $PATH.
+feature requires mplayer to also be installed on $PATH.
 
 
 # Optional Yearly Reading Schedule
@@ -93,6 +94,23 @@ If used, this schedule aims for minimum range and standard deviation
 of the reading syllables per day.  See yearplan.png for a graphical
 view of this reading schedule.  See bookmarks.ps for this schedule in
 bookmark format suitable for printing (try "make print").
+
+
+# Optional Text to Audio Synchronization Points
+
+Every chapter audio has a playing duration and its text has a known
+length in syllables.  This determines the average reading speed in
+syllables per second, used to time each line automatically.  These
+average reading rates are logged in lrc.log.
+
+As reading speed changes throughout a long chapter this causes the
+synchronization to drift.  This can be improved by introducing
+synchronization points between verses.  Any verse could be
+synchronized but so far this manual process is complete only for a
+portion of the Alexander Scourby files, mostly between paragraphs.
+These sync points are indicated by the :verse: dropping its
+punctuation to .verse.  The lrc.log then lists all the reading rates
+between these sync points.
 
 
 # Thoughts on .mp3 Bible Chapter METADATA
@@ -128,10 +146,11 @@ These .lrc files were generated from the source AS/OF dates above.  If
 the source audio changes, or to apply to different audio, the code can
 be re-run against new .mp3 content.  This will require:
 
-* the SWORD project and its diatheke command
+* SWORD project and its diatheke command (optional, to update kjv.txt)
 * perl to run my code in bin/
 * exiftool to measure .mp3 audio length
 * make to fully automate the process from my Makefiles
+* WHO/.kjvmp3.pl to describe the new audio, see */.kjvmp3.pl examples
 
 See Makefile to see the details of how the files are generated:
 

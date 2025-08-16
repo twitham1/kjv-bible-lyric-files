@@ -1,7 +1,7 @@
 # kjvmp3 config file
 
-my $who = 'Stephen Johnston';
-my $file = '66_Revelation_22.mp3';
+my $who = 'Stephen Johnston';	   # artist of this recording
+my $file = '66_Revelation_22.mp3'; # file unique to this recording
 -f $file
     or die "$file not found, are you sure this is $who?";
 

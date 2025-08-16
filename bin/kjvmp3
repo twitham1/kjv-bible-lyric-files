@@ -219,7 +219,7 @@ sub readsyncs {			# read optional text/audio sync points
 	    s/\s*#.*//;
 	    m/^(\w+)$/ and $book = $1;
 	    m/^__END__$/ and $syncs = {}; # start over
-	    m/(\d+):(\d+)\s+(\d+):(\d+)/
+	    m/(\d+)[.:](\d+)\s+(\d+)[.:](\d+)/
 		and $syncs->{"$book $1"}{$2}{sec} = $3 * 60 + $4;
 	}
 	close $fh or die $!;
@@ -283,12 +283,13 @@ sub lyric {
     my @rate = (sprintf('%.2f', $rate->{0}{per})); # rates used
     open OUT, '>:encoding(UTF-8)', ($opt{n} ? '/dev/null' : "$out~")
 	or die $!;
-    for my $line (@$lineref) {
+    for my $line (@$lineref) {	# lines of chapter
 	$line =~ m/.*\d+:(\d+):/
-	    and (defined $rate->{$1})
+	    and (defined $rate->{$1}) # begin new rate section
 	    and $verse = $1
+	    and $t = $rate->{$1}{sec}
 	    and push @rate, sprintf('%.2f', $rate->{$1}{per})
-	    and $line =~ s/:(\d+):/.$1./;
+	    and $line =~ s/:(\d+):/.$1./;     # sync marker
 	$line =~ s/^(\d+)\t(\d+)\t// or next; # words, syllables
 	my $sybs = $2;			      # syllables
 	$num and $line =~ s/( syllables,.*)./$1, $num syncs)/;
@@ -301,8 +302,10 @@ sub lyric {
     }
     close OUT or die $!;
     $opt{n} or (replace_file("$out~", $out) and unlink "$out~");
-    printf "%4d secs in %4d lines in $out, syb/s: @rate\n",
-	$duration, scalar @$lineref;
+    printf "%4d secs of %4d sybs in %4d lines in $out, syb/s: @rate\n",
+	$duration, $len, scalar @$lineref - 1; # footer doesn't count
+    warn "Suspicious reading rate in $out: @rate\n"
+	if grep { $_ < 2 || $_ > 7 } @rate;
     return 1;
 }
 
