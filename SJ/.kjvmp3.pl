@@ -27,6 +27,21 @@ return {
     },
     length => sub {
 	my($sec, $chap, $next) = @_;
+
+	# Fix truncated Ezekiel 27 by tripling the time
+	$chap eq 'Ezekiel Chapter 27' and $sec *= 3;
+
 	return $sec - 3;	# 3 second silent tail
     },
 };
+
+# optional text/audio sync points follow in format:
+
+# AbbreviatedBook
+# Chapter:Verse Minutes:Seconds
+# Chapter.Verse Minutes.Seconds
+
+__END__
+
+Eze
+27.12 1.15	# sync just before truncation

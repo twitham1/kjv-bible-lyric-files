@@ -29,8 +29,9 @@ dist: lrc.log
 	cat ./${WHO}/README > README && \
 	cat README.md >> README && \
 	cd .. && \
-	tar zcvf KJV-${WHO}.tgz --exclude '.*' \
+	tar zcvf KJV-${WHO}.tgz --exclude .RCS --exclude '*tmp*txt' \
 	KJV/README \
+	KJV/README.md \
 	KJV/COPYING \
 	KJV/Makefile \
 	KJV/*.txt \
@@ -40,6 +41,7 @@ dist: lrc.log
 	KJV/bin \
 	KJV/${WHO}/README \
 	KJV/${WHO}/Makefile \
+	KJV/${WHO}/.kjvmp3.pl \
 	KJV/${WHO}/*.txt \
 	KJV/${WHO}/*.log \
 	KJV/${WHO}/*.lrc

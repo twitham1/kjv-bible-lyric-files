@@ -58,7 +58,7 @@ read|r=i annotate|a file|f=s check|c syllable|s bookmark|b))
 $opt{check} and $opt{lyric} = 1;
 $opt{syllable} and $opt{lyric} = 1;
 
-if (grep / Chapter /, @ARGV) {
+if (!$opt{lyric} and grep / Chapter /, @ARGV) { # audio player for emacs
     chdir $cache or
 	die "please symlink dir of *.mp3 to $cache: $!";
 } else {
@@ -292,7 +292,8 @@ sub lyric {
 	    and $line =~ s/:(\d+):/.$1./;     # sync marker
 	$line =~ s/^(\d+)\t(\d+)\t// or next; # words, syllables
 	my $sybs = $2;			      # syllables
-	$num and $line =~ s/( syllables,.*)./$1, $num syncs)/;
+	$num and $line =~ s/( syllables,.*)./$1, $num syncs\)/
+	    and $num == 1 and $line =~ s/syncs/sync/;
 	my $min = int($t / 60);
 	my $sec = $t - $min * 60;
 	my $this = sprintf "[%02d:%05.02f]$line", $min, $sec;
@@ -305,7 +306,7 @@ sub lyric {
     printf "%4d secs of %4d sybs in %4d lines in $out, syb/s: @rate\n",
 	$duration, $len, scalar @$lineref - 1; # footer doesn't count
     warn "Suspicious reading rate in $out: @rate\n"
-	if grep { $_ < 2 || $_ > 7 } @rate;
+	if grep { $_ < 3 || $_ > 8 } @rate;
     return 1;
 }
 
