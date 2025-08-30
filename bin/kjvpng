@@ -154,7 +154,7 @@ sub drawplan {
     my $tmp = sprintf '%05.0f-%09.3f', $self->range, $self->sdev;
     if ($tmp lt ($self->{best} || '9999')) {
 	$self->{best} = $tmp;
-	$file = join ('-', '.out', $self->{days}, $tmp);
+	$file = join ('-', '.kjv', $self->{days}, $tmp);
     }
 
     open FILE, '>', $file ? "$file.txt" : '/dev/null' or die "$file.txt: $!";
@@ -307,7 +307,7 @@ sub best {			# best plan found so far
     my($self) = @_;
     my $day = my $i = 0;
     my $loaded = '';
-    for my $file (glob(".out-$self->{days}*.txt"), 'yearplan.tmp') {
+    for my $file (glob(".kjv-$self->{days}*.txt"), 'yearplan.tmp') {
 	if (open FILE, $file) {
 	    warn "loaded $file\n";
 	    while (<FILE>) {

@@ -12,14 +12,19 @@ dist:
 	cat ./${WHO}/README > README && \
 	cat README.md >> README && \
 	cd .. && \
-	tar zcvf KJV-${WHO}.tgz \
+	tar zcvf KJV-${WHO}.tgz --exclude '*~' --exclude .RCS --exclude '*tmp*txt' \
 	KJV/README \
+	KJV/README.md \
+	KJV/README-TABS \
 	KJV/COPYING \
 	KJV/Makefile \
 	KJV/*.txt \
+	KJV/*.png \
 	KJV/bookmarks.ps \
 	KJV/site-lisp \
 	KJV/bin \
+	KJV/MythMusic \
+	KJV/test.lrc \
 	KJV/${WHO}/README \
 	KJV/${WHO}/Makefile
 
