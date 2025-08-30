@@ -1,0 +1,65 @@
+#!/usr/bin/perl
+
+# find the pixel width of every chapter:verse prefix in kjv.txt
+
+use strict;
+use warnings;
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
+
+my $font = shift @ARGV
+    or die "$0 font kjv.txt
+    for example: $0 Ubuntu:size=41 kjv.txt\n";
+my %seen;
+my %width;
+my %line;
+my $wid;
+while (<DATA>) {		# header from __END__ below
+    $wid++;
+    s/FONT/$font/;
+    s/PROGRAM/$0 $font @ARGV/;
+    $width{$wid} = $wid;
+    $line{$wid} = $_;
+}
+while (<>) {			# must be kjv.txt
+    /\d+:\d+:/ or next;
+    s/^\[\S+\]//;
+    s/\b\d\d\d:/333:/g;
+    s/\b\d\d:/22:/g;
+    s/\b\d:/1:/g;
+    my($b, $n) = split;
+    my $key = "$b $n";
+    $key = $1 if /(.*\d+:\s*)/;	# [maybe one space] one tab
+    $seen{$key}++ and next;
+    my $len = sprintf '%2d', length $key;
+    my $note = $key =~ / \t/ ? ' (space-tab)' : '';
+    chomp($wid = `"$Bin/xft_str_width" "$font" "$key"`);
+    s/(\d+:\s+).*/$1| $len bytes | width=$wid$note/;
+    $width{$key} = $wid;
+    $line{$key} = $_;
+}
+my $sec = 0;
+for (sort { $width{$a} <=> $width{$b} || $a cmp $b } keys %width) {
+    $sec++;
+    my($m, $s) = ($sec / 60, $sec % 60);
+    printf "[%02d:%02d.00]%s", $m, $s, $line{$_};
+}
+__END__
+		| lyric display test file for FONT
+		| by PROGRAM
+		|
+		|<-- text starts at column 16 after 2 tabs
+ilililil	| vertical line in column 16 should align
+WMWMWMWM	| after any characters, narrow or wide
+		|
+		| verse prefix text is 7 to 12 bytes:
+		|
+1234567 	|  7 + SPACE + tab = 9 bytes
+12345678	|  8 + tab =  9 bytes
+123456789	|  9 + tab = 10 bytes
+1234567890	| 10 + tab = 11 bytes
+12345678901	| 11 + tab = 12 bytes
+123456789012	| 12 + tab = 13 bytes
+		|
+		| all possible prefixes are:
+		|

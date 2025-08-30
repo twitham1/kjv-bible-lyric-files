@@ -96,21 +96,32 @@ view of this reading schedule.  See bookmarks.ps for this schedule in
 bookmark format suitable for printing (try "make print").
 
 
+# Optional Reformating of the Left Margin or Verse References
+
+The left margin includes a full book, chapter, verse reference
+followed by one ASII tab character before the text.  The continued
+lines of the verse are prefixed with two tabs.  If your text alignment
+is wrong or you prefer shorter verse references or different left
+margin, please see ./README-TABS for alternate left margin options.
+
+
 # Optional Text to Audio Synchronization Points
 
 Every chapter audio has a playing duration and its text has a known
 length in syllables.  This determines the average reading speed in
-syllables per second, used to time each line automatically.  These
-average reading rates are logged in lrc.log.
+syllables per second.  The time of each line is then syllables so far
+divided by the speed.  These average reading rates are automatically
+calculated and logged in lrc.log.
 
-As reading speed changes throughout a long chapter this causes the
-synchronization to drift.  This can be improved by introducing
-synchronization points between verses.  Any verse could be
-synchronized but so far this manual process is complete only for a
-portion of the Alexander Scourby files, mostly between paragraphs.
-These sync points are indicated by the :verse: dropping its
-punctuation to .verse.  The lrc.log then lists all the reading rates
-between these sync points.
+As natural reading speed changes throughout a long chapter this causes
+the synchronization to drift.  Drift can be reduced by introducing
+synchronization points between verses.  Any verse could be manually
+synchronized but so far this is being done only for the Alexander
+Scourby files, mostly between paragraphs.  (This should be finished by
+April 2026).  These sync points are indicated by the :verse: changing
+its punctuation to .verse. and the sync count is appended in the file
+(footer).  The lrc.log lists all reading rates between these sync
+points.  See ./AS/.kjvmp3.pl for how sync points are recorded.
 
 
 # Thoughts on .mp3 Bible Chapter METADATA
@@ -124,8 +135,8 @@ What I do in either case is use a tool like puddletag (or mp3tag) to
 give all files one Album name, like KJV-AS, and Artist and year.  Then
 I assign 66 Disc numbers to the 66 books in order.  Then I assign the
 chapters of the books as Track numbers of the Disc.  My player sorts
-albums by disc and track, so this keeps the whole Bible in order no
-matter the file names.
+albums by disc and track, so this keeps the whole Bible in order even
+if the file names don't sort well.
 
 However, Disc can have no more than 99 tracks so Psalms can't fit in a
 single Disc.  The solution is to combine Psalms and Proverbs into two

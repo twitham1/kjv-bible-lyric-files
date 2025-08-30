@@ -48,3 +48,7 @@ print: bookmarks.ps
 
 clean:
 	rm kjv*.tmp kjv*.txt year*.txt
+
+# optional, for bin/kjvpixwidth, see MythMusic/README
+bin/xft_str_width: xft_str_width.c
+	cc xft_str_width.c -o bin/xft_str_width `pkg-config --cflags x11 xft freetype2` `pkg-config --libs x11 xft freetype2`
