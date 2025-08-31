@@ -14,8 +14,7 @@ dist:
 	cd .. && \
 	tar zcvf KJV-${WHO}.tgz --exclude '*~' --exclude .RCS --exclude '*tmp*txt' \
 	KJV/README \
-	KJV/README.md \
-	KJV/README-TABS \
+	KJV/README-OPTIONS \
 	KJV/COPYING \
 	KJV/Makefile \
 	KJV/*.txt \

@@ -1,4 +1,4 @@
-	(first see ../README-TABS)
+	(first see ../README-OPTIONS)
 
 	How to align KJV lyrics in MythMusic of MythTV
 
@@ -11,33 +11,46 @@ left edge of the text for shorter verse prefixes.  What follows is how
 I got my text aligned for all lines!
 
 You can overwrite a .lrc file at any time and use Menu->Filelyrics (or
-Filetweak) to update the lyric view.  Then you can scoll up/down with
+Filetweak) to update the lyric view.  Then you can scroll up/down with
 the arrow keys to see the content.  We generate and use a test.lrc
 file which will clearly show the alignment of all verse prefixes.
 
 In ../, use Makefile to "make bin/xft_str_width" for measuring the
-pixels of a string in a given font.  Then run bin/kjvpixwidth to
-measure the width of all verse prefixes for the font you use in
-MythMusic.  On my Mythbuntu frontend, this was:
+pixels of a string in a given font.  On my Mythbuntu front end the
+font used for lyrics in the theme's music-ui.xml file is "basemedium"
+whose definition can be found in the theme's base.xml file:
+
+    <fontdef name="basesmall" face="Ubuntu">
+        <pixelsize>30</pixelsize>
+        <color>#FFFFFF</color>
+    </fontdef>
+    <fontdef name="basemedium" from="basesmall">
+        <pixelsize>41</pixelsize>
+    </fontdef>
+
+Now run bin/kjvpixwidth to measure the width of all verse prefixes for
+the font used by MythMusic lyrics:
 
 	bin/kjvpixwidth Ubuntu:size=41 kjv.txt > test.lrc
 
-Copy this test file to some LongChapter.lrc on the backend and play
+Copy this test file to some LongChapter.lrc on the back end and play
 LongChapter.mp3 in MythMusic.  Menu -> Lyrics should cause Filelyrics
 to show the test file.  This file is sorted in order of shortest to
 longest verse prefixes.  The text may shift right at some pixel
-measurement where the width of the prefix causes the too close tab to
-move further right.  For my Mythbuntu font this happens at 239 pixels.
+measurement where the width of the prefix pushes the too close tab
+further right.  For my Mythbuntu font this happens at 239 pixels.
 Edit this number in common/filetweak.py near line 57.
 
 The idea is to insert an extra needed tab only in shorter prefixes.
+If there is some back-and-forth in viewing the test.lrc file, you can
+hand edit the width= to be above or below the cutoff number as needed.
 Copy the test.lrc file into the end of bin/kjvwidth after its __END__.
-This code now reports the cached size of any chapter/verse prefix.
+This code now reports the cached width of any chapter/verse prefix.
 
-Now copy the ./filetweak.py stub to the backend's lyric grabber
+Now copy the ./filetweak.py stub to the back end's lyric grabber
 location.  For me this is at /usr/share/mythtv/metadata/Music/lyrics/
 Then copy common/filetweak.py and bin/kjvwidth to the common/
-subdirectory of lyrics/.  Now filetweak.py should run before
+sub directory of lyrics/.  Now filetweak.py should run before
 filelyrics, inserting an extra tab only for shorter prefixes.
 
 This works for me on MythTV v35 or higher.  If you have older MythTV,

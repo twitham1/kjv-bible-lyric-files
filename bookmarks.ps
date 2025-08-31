@@ -1,0 +1,1310 @@
+%!PS-Adobe-3.0
+%%Title: bookmarks.txt
+%%For: mythfe
+%%Creator: a2ps version 4.14
+%%CreationDate: Mon Aug 11 00:57:19 2025
+%%BoundingBox: 24 40 588 752
+%%DocumentData: Clean7Bit
+%%Orientation: Landscape
+%%Pages: 4
+%%PageOrder: Ascend
+%%DocumentMedia: Letterdj 612 792 0 () ()
+%%DocumentNeededResources: font Courier
+%%+ font Courier-Bold
+%%+ font Courier-BoldOblique
+%%+ font Courier-Oblique
+%%+ font Helvetica
+%%+ font Helvetica-Bold
+%%+ font Symbol
+%%+ font Times-Bold
+%%+ font Times-Roman
+%%DocumentProcessColors: Black 
+%%DocumentSuppliedResources: procset a2ps-a2ps-hdr
+%%+ procset a2ps-black+white-Prolog
+%%+ encoding ISO-8859-1Encoding
+%%EndComments
+/a2psdict 200 dict def
+a2psdict begin
+%%BeginProlog
+%%Copyright: (c) 1988, 89, 90, 91, 92, 93 Miguel Santana
+%%Copyright: (c) 1995, 96, 97, 98 Akim Demaille, Miguel Santana
+% Check PostScript language level.
+/languagelevel where {
+  pop /gs_languagelevel languagelevel def
+} {
+  /gs_languagelevel 1 def
+} ifelse
+
+% EPSF import as in the Red Book
+/BeginInclude {
+  /b4_Inc_state save def    		% Save state for cleanup
+  /dict_count countdictstack def	% Count objects on dict stack
+  /op_count count 1 sub def		% Count objects on operand stack 
+  userdict begin
+    0 setgray 0 setlinecap
+    1 setlinewidth 0 setlinejoin
+    10 setmiterlimit [ ] 0 setdash newpath
+    gs_languagelevel 1 ne {
+      false setstrokeadjust false setoverprint 
+    } if
+} bind def
+
+/EndInclude {
+  count op_count sub { pos } repeat	% Clean up stacks
+  countdictstack dict_count sub { end } repeat
+  b4_Inc_state restore
+} bind def
+
+/BeginEPSF {
+  BeginInclude
+  /showpage { } def
+} bind def
+
+/EndEPSF {
+  EndInclude
+} bind def
+
+% Page prefeed
+/page_prefeed {         % bool -> -
+  statusdict /prefeed known {
+    statusdict exch /prefeed exch put
+  } {
+    pop
+  } ifelse
+} bind def
+
+/deffont {
+  findfont exch scalefont def
+} bind def
+
+/reencode_font {
+  findfont reencode 2 copy definefont pop def
+} bind def
+
+% Function c-show (str => -)
+% centers text only according to x axis.
+/c-show { 
+  dup stringwidth pop
+  2 div neg 0 rmoveto
+  show
+} bind def
+
+% Function l-show (str => -)
+% prints texts so that it ends at currentpoint
+/l-show {
+  dup stringwidth pop neg 
+  0 
+  rmoveto show
+} bind def
+
+% center-fit show (str w => -)
+% show centered, and scale currentfont so that the width is less than w
+/cfshow {
+  exch dup stringwidth pop
+  % If the title is too big, try to make it smaller
+  3 2 roll 2 copy
+  gt
+  { % if, i.e. too big
+    exch div
+    currentfont exch scalefont setfont
+  } { % ifelse
+    pop pop 
+  }
+  ifelse
+  c-show			% center title
+} bind def
+
+% Return the y size of the current font
+% - => fontsize
+/currentfontsize {
+  currentfont /FontType get 0 eq {
+    currentfont /FontMatrix get 3 get
+  }{
+    currentfont /FontMatrix get 3 get 1000 mul
+  } ifelse
+} bind def
+
+% reencode the font
+% <encoding-vector> <fontdict> -> <newfontdict>
+/reencode { %def
+  dup length 5 add dict begin
+    { %forall
+      % <vector> <key> <val>
+      1 index /FID ne 
+      { def }{ pop pop } ifelse
+    } forall
+    /Encoding exch def % -
+
+    % Use the font's bounding box to determine the ascent, descent,
+    % and overall height; don't forget that these values have to be
+    % transformed using the font's matrix.
+    % We use `load' because sometimes BBox is executable, sometimes not.
+    % Since we need 4 numbers an not an array avoid BBox from being executed
+    /FontBBox load aload pop
+    FontMatrix transform /Ascent exch def pop
+    FontMatrix transform /Descent exch def pop
+    /FontHeight Ascent Descent sub def
+
+    % Get the underline position and thickness if they're defined.
+    % Use 1 if they are not defined.
+    currentdict /FontInfo 2 copy known
+    { get
+      /UnderlinePosition 2 copy % <FontInfo> /UP <FontInfo> /UP
+      2 copy known
+      { get }{ pop pop 1 } ifelse
+      0 exch FontMatrix transform exch pop
+      def % <FontInfo>
+
+      /UnderlineThickness 2 copy % <FontInfo> /UT <FontInfo> /UT
+      2 copy known
+      { get }{ pop pop 1 } ifelse
+      0 exch FontMatrix transform exch pop
+      def % <FontInfo>
+      pop % -
+    }{ pop pop
+    } ifelse
+
+    currentdict
+  end 
+} bind def
+
+% composite fonts for ASCII-EUC mixed strings
+% Version 1.2 1/31/1990
+% Original Ken'ichi HANDA (handa@etl.go.jp)
+% Modified Norio Katayama (katayama@rd.nacsis.ac.jp),1998
+% Extend & Fix Koji Nakamaru (maru@on.cs.keio.ac.jp), 1999
+% Anyone can freely copy, modify, distribute this program.
+
+/copyfont {	% font-dic extra-entry-count  copyfont  font-dic
+	1 index maxlength add dict begin
+	{	1 index /FID ne 2 index /UniqueID ne and
+		{def} {pop pop} ifelse
+	} forall
+	currentdict
+	end
+} bind def
+
+/compositefont { % ASCIIFontName EUCFontName RomanScale RomanOffset Rot(T/F) compositefont font
+    /RomanRotation exch def
+    /RomanOffset exch def
+    /RomanScale exch def
+    userdict /fixeucfont_dict known not {
+	userdict begin
+	    /fixeucfont_dict 2 dict begin
+		/UpperByteEncoding [
+		    16#00 1 16#20 { pop 0 } for
+		    16#21 1 16#28 { 16#20 sub } for
+		    16#29 1 16#2F { pop 0 } for
+		    16#30 1 16#74 { 16#27 sub } for
+		    16#75 1 16#FF { pop 0 } for
+		] def
+	        /LowerByteEncoding [
+		    16#00 1 16#A0 { pop /.notdef } for
+		    16#A1 1 16#FE { 16#80 sub 16 2 string cvrs
+				    (cXX) dup 1 4 -1 roll
+				    putinterval cvn } for
+		    /.notdef
+		] def
+		currentdict
+	    end def
+	end
+    } if
+    findfont dup /FontType get 0 eq {
+	14 dict begin
+	    %
+	    % 7+8 bit EUC font
+	    %
+	    12 dict begin
+		/EUCFont exch def
+		/FontInfo (7+8 bit EUC font) readonly def
+		/PaintType 0 def
+		/FontType 0 def
+		/FontMatrix matrix def
+		% /FontName
+		/Encoding fixeucfont_dict /UpperByteEncoding get def
+		/FMapType 2 def
+		EUCFont /WMode known
+		{ EUCFont /WMode get /WMode exch def }
+		{ /WMode 0 def } ifelse
+		/FDepVector [
+		    EUCFont /FDepVector get 0 get
+		    [ 16#21 1 16#28 {} for 16#30 1 16#74 {} for ]
+		    {
+			13 dict begin
+			    /EUCFont EUCFont def
+			    /UpperByte exch 16#80 add def	
+			    % /FontName
+			    /FontInfo (EUC lower byte font) readonly def
+			    /PaintType 0 def
+			    /FontType 3 def
+			    /FontMatrix matrix def
+			    /FontBBox {0 0 0 0} def
+			    /Encoding
+				fixeucfont_dict /LowerByteEncoding get def
+			    % /UniqueID
+			    % /WMode
+			    /BuildChar {
+				gsave
+				exch dup /EUCFont get setfont
+				/UpperByte get
+				2 string
+				dup 0 4 -1 roll put
+				dup 1 4 -1 roll put
+				dup stringwidth setcharwidth
+				0 0 moveto show
+				grestore
+			    } bind def
+			    currentdict
+			end
+			/lowerbytefont exch definefont
+		    } forall
+		] def
+		currentdict
+	    end
+	    /eucfont exch definefont
+	    exch
+	    findfont 1 copyfont dup begin
+		RomanRotation {
+			/FontMatrix FontMatrix
+			[ 0 RomanScale neg RomanScale 0 RomanOffset neg 0 ]
+			matrix concatmatrix def
+		}{
+			/FontMatrix FontMatrix
+			[ RomanScale 0 0 RomanScale 0 RomanOffset ] matrix concatmatrix
+			def
+			/CDevProc
+			    {pop pop pop pop 0 exch -1000 exch 2 div 880} def
+		} ifelse
+	    end
+	    /asciifont exch definefont
+	    exch
+	    /FDepVector [ 4 2 roll ] def
+	    /FontType 0 def
+	    /WMode 0 def
+	    /FMapType 4 def
+	    /FontMatrix matrix def
+	    /Encoding [0 1] def
+	    /FontBBox {0 0 0 0} def
+%	    /FontHeight 1.0 def % XXXX
+	    /FontHeight RomanScale 1.0 ge { RomanScale }{ 1.0 } ifelse def
+	    /Descent -0.3 def   % XXXX
+	    currentdict
+	end
+	/tmpfont exch definefont
+	pop
+	/tmpfont findfont
+    }{
+	pop findfont 0 copyfont
+    } ifelse
+} def	
+
+/slantfont {	% FontName slant-degree  slantfont  font'
+    exch findfont 1 copyfont begin
+    [ 1 0 4 -1 roll 1 0 0 ] FontMatrix exch matrix concatmatrix
+    /FontMatrix exch def
+    currentdict
+    end
+} def
+
+% Function print line number (<string> # -)
+/# {
+  gsave
+    sx cw mul neg 2 div 0 rmoveto
+    f# setfont
+    c-show
+  grestore
+} bind def
+
+% -------- Some routines to enlight plain b/w printings ---------
+
+% Underline
+% width --
+/dounderline {
+  currentpoint
+  gsave
+    moveto
+    0 currentfont /Descent get currentfontsize mul rmoveto
+    0 rlineto
+    stroke
+  grestore
+} bind def
+
+% Underline a string
+% string --
+/dounderlinestring {
+  stringwidth pop
+  dounderline
+} bind def
+
+/UL {
+  /ul exch store
+} bind def
+
+% Draw a box of WIDTH wrt current font
+% width --
+/dobox {
+  currentpoint
+  gsave
+    newpath
+    moveto
+    0 currentfont /Descent get currentfontsize mul rmoveto
+    dup 0 rlineto
+    0 currentfont /FontHeight get currentfontsize mul rlineto
+    neg 0 rlineto
+    closepath
+    stroke
+  grestore
+} bind def
+
+/BX {
+  /bx exch store
+} bind def
+
+% Box a string
+% string --
+/doboxstring {
+  stringwidth pop
+  dobox
+} bind def
+
+%
+% ------------- Color routines ---------------
+%
+/FG /setrgbcolor load def
+
+% Draw the background
+% width --
+/dobackground {
+  currentpoint
+  gsave
+    newpath
+    moveto
+    0 currentfont /Descent get currentfontsize mul rmoveto
+    dup 0 rlineto
+    0 currentfont /FontHeight get currentfontsize mul rlineto
+    neg 0 rlineto
+    closepath
+    bgcolor aload pop setrgbcolor
+    fill
+  grestore
+} bind def
+
+% Draw bg for a string
+% string --
+/dobackgroundstring {
+  stringwidth pop
+  dobackground
+} bind def
+
+
+/BG {
+  dup /bg exch store
+  { mark 4 1 roll ] /bgcolor exch store } if
+} bind def
+
+
+/Show {
+  bg { dup dobackgroundstring } if
+  ul { dup dounderlinestring } if
+  bx { dup doboxstring } if
+  show
+} bind def
+
+% Function T(ab), jumps to the n-th tabulation in the current line
+/T {
+  cw mul x0 add
+  bg { dup currentpoint pop sub dobackground } if
+  ul { dup currentpoint pop sub dounderline } if
+  bx { dup currentpoint pop sub dobox } if
+  y0 moveto
+} bind def
+
+% Function n: move to the next line
+/n {
+  /y0 y0 bfs sub store
+  x0 y0 moveto
+} bind def
+
+% Function N: show and move to the next line
+/N {
+  Show
+  /y0 y0 bfs sub store
+  x0 y0 moveto
+} bind def
+
+/S {
+  Show
+} bind def
+
+%%BeginResource: procset a2ps-a2ps-hdr 2.0 2
+%%Copyright: (c) 1988, 89, 90, 91, 92, 93 Miguel Santana
+%%Copyright: (c) 1995, 96, 97, 98 Akim Demaille, Miguel Santana
+% Function title: prints page header.
+% <ct> <rt> <lt> are passed as argument
+/title { 
+  % 1. Draw the background
+  x v get y v get moveto
+  gsave
+    0 th 2 div neg rmoveto 
+    th setlinewidth
+    0.95 setgray
+    pw 0 rlineto stroke
+  grestore
+  % 2. Border it
+  gsave
+    0.7 setlinewidth
+    pw 0 rlineto
+    0 th neg rlineto
+    pw neg 0 rlineto
+    closepath stroke
+  grestore
+  % stk: ct rt lt
+  x v get y v get th sub 1 add moveto
+%%IncludeResource: font Helvetica
+  fHelvetica fnfs 0.8 mul scalefont setfont
+  % 3. The left title
+  gsave
+    dup stringwidth pop fnfs 0.8 mul add exch % leave space took on stack
+    fnfs 0.8 mul hm rmoveto
+    show			% left title
+  grestore
+  exch
+  % stk: ct ltw rt
+  % 4. the right title
+  gsave
+    dup stringwidth pop fnfs 0.8 mul add exch % leave space took on stack
+    dup
+    pw exch stringwidth pop fnfs 0.8 mul add sub
+    hm
+    rmoveto
+    show			% right title
+  grestore
+  % stk: ct ltw rtw
+  % 5. the center title
+  gsave
+    pw 3 1 roll
+    % stk: ct pw ltw rtw
+    3 copy 
+    % Move to the center of the left room
+    sub add 2 div hm rmoveto
+    % What is the available space in here?
+    add sub fnfs 0.8 mul sub fnfs 0.8 mul sub
+    % stk: ct space_left
+%%IncludeResource: font Helvetica-Bold
+  fHelvetica-Bold fnfs scalefont setfont
+    cfshow
+  grestore
+} bind def
+
+% Function border: prints virtual page border
+/border { %def
+  gsave				% print four sides
+    0 setgray
+    x v get y v get moveto
+    0.7 setlinewidth		% of the square
+    pw 0 rlineto
+    0 ph neg rlineto
+    pw neg 0 rlineto
+    closepath stroke
+  grestore
+} bind def
+
+% Function water: prints a water mark in background
+/water { %def
+  gsave
+    scx scy moveto rotate
+%%IncludeResource: font Times-Bold
+  fTimes-Bold 100 scalefont setfont
+    .97 setgray
+    dup stringwidth pop 2 div neg -50 rmoveto
+    show
+  grestore
+} bind def
+
+% Function rhead: prints the right header
+/rhead {  %def
+  lx ly moveto
+  fHelvetica fnfs 0.8 mul scalefont setfont
+  l-show
+} bind def
+
+% Function footer (cf rf lf -> -)
+/footer {
+  fHelvetica fnfs 0.8 mul scalefont setfont
+  dx dy moveto
+  show
+
+  snx sny moveto
+  l-show
+  
+  fnx fny moveto
+  c-show
+} bind def
+%%EndResource
+%%BeginResource: procset a2ps-black+white-Prolog 2.0 1
+
+% Function T(ab), jumps to the n-th tabulation in the current line
+/T { 
+  cw mul x0 add y0 moveto
+} bind def
+
+% Function n: move to the next line
+/n { %def
+  /y0 y0 bfs sub store
+  x0 y0 moveto
+} bind def
+
+% Function N: show and move to the next line
+/N {
+  Show
+  /y0 y0 bfs sub store
+  x0 y0 moveto
+}  bind def
+
+/S {
+  Show
+} bind def
+
+/p {
+  false UL
+  false BX
+  fCourier bfs scalefont setfont
+  Show
+} bind def
+
+/sy {
+  false UL
+  false BX
+  fSymbol bfs scalefont setfont
+  Show
+} bind def
+
+/k {
+  false UL
+  false BX
+  fCourier-Oblique bfs scalefont setfont
+  Show
+} bind def
+
+/K {
+  false UL
+  false BX
+  fCourier-Bold bfs scalefont setfont
+  Show
+} bind def
+
+/c {
+  false UL
+  false BX
+  fCourier-Oblique bfs scalefont setfont
+  Show
+} bind def
+
+/C {
+  false UL
+  false BX
+  fCourier-BoldOblique bfs scalefont setfont
+  Show 
+} bind def
+
+/l {
+  false UL
+  false BX
+  fHelvetica bfs scalefont setfont
+  Show
+} bind def
+
+/L {
+  false UL
+  false BX
+  fHelvetica-Bold bfs scalefont setfont
+  Show 
+} bind def
+
+/str{
+  false UL
+  false BX
+  fTimes-Roman bfs scalefont setfont
+  Show
+} bind def
+
+/e{
+  false UL
+  true BX
+  fHelvetica-Bold bfs scalefont setfont
+  Show
+} bind def
+
+%%EndResource
+%%EndProlog
+%%BeginSetup
+%%IncludeResource: font Courier
+%%IncludeResource: font Courier-Oblique
+%%IncludeResource: font Courier-Bold
+%%IncludeResource: font Times-Roman
+%%IncludeResource: font Symbol
+%%IncludeResource: font Courier-BoldOblique
+%%BeginResource: encoding ISO-8859-1Encoding
+/ISO-8859-1Encoding [
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/space /exclam /quotedbl /numbersign /dollar /percent /ampersand /quoteright 
+/parenleft /parenright /asterisk /plus /comma /minus /period /slash 
+/zero /one /two /three /four /five /six /seven 
+/eight /nine /colon /semicolon /less /equal /greater /question 
+/at /A /B /C /D /E /F /G 
+/H /I /J /K /L /M /N /O 
+/P /Q /R /S /T /U /V /W 
+/X /Y /Z /bracketleft /backslash /bracketright /asciicircum /underscore 
+/quoteleft /a /b /c /d /e /f /g 
+/h /i /j /k /l /m /n /o 
+/p /q /r /s /t /u /v /w 
+/x /y /z /braceleft /bar /braceright /asciitilde /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef /.notdef 
+/space /exclamdown /cent /sterling /currency /yen /brokenbar /section 
+/dieresis /copyright /ordfeminine /guillemotleft /logicalnot /hyphen /registered /macron 
+/degree /plusminus /twosuperior /threesuperior /acute /mu /paragraph /bullet 
+/cedilla /onesuperior /ordmasculine /guillemotright /onequarter /onehalf /threequarters /questiondown 
+/Agrave /Aacute /Acircumflex /Atilde /Adieresis /Aring /AE /Ccedilla 
+/Egrave /Eacute /Ecircumflex /Edieresis /Igrave /Iacute /Icircumflex /Idieresis 
+/Eth /Ntilde /Ograve /Oacute /Ocircumflex /Otilde /Odieresis /multiply 
+/Oslash /Ugrave /Uacute /Ucircumflex /Udieresis /Yacute /Thorn /germandbls 
+/agrave /aacute /acircumflex /atilde /adieresis /aring /ae /ccedilla 
+/egrave /eacute /ecircumflex /edieresis /igrave /iacute /icircumflex /idieresis 
+/eth /ntilde /ograve /oacute /ocircumflex /otilde /odieresis /divide 
+/oslash /ugrave /uacute /ucircumflex /udieresis /yacute /thorn /ydieresis 
+] def
+%%EndResource
+% Initialize page description variables.
+/sh 612 def
+/sw 792 def
+/llx 40 def
+/urx 752 def
+/ury 588 def
+/lly 24 def
+/#copies 1 def
+/th 0.000000 def
+/fnfs 11 def
+/bfs 11.643379 def
+/cw 6.986028 def
+
+% Dictionary for ISO-8859-1 support
+/iso1dict 8 dict begin
+  /fCourier ISO-8859-1Encoding /Courier reencode_font
+  /fCourier-Bold ISO-8859-1Encoding /Courier-Bold reencode_font
+  /fCourier-BoldOblique ISO-8859-1Encoding /Courier-BoldOblique reencode_font
+  /fCourier-Oblique ISO-8859-1Encoding /Courier-Oblique reencode_font
+  /fHelvetica ISO-8859-1Encoding /Helvetica reencode_font
+  /fHelvetica-Bold ISO-8859-1Encoding /Helvetica-Bold reencode_font
+  /fTimes-Bold ISO-8859-1Encoding /Times-Bold reencode_font
+  /fTimes-Roman ISO-8859-1Encoding /Times-Roman reencode_font
+currentdict end def
+/bgcolor [ 0 0 0 ] def
+/bg false def
+/ul false def
+/bx false def
+% The font for line numbering
+/f# /Helvetica findfont bfs .6 mul scalefont def
+/fSymbol /Symbol findfont def
+/hm fnfs 0.25 mul def
+/pw
+   cw 33.400000 mul
+def
+/ph
+   555.389188 th add
+def
+/pmw urx llx sub pw 3 mul sub 2 div def
+/pmh 0 def
+/v 0 def
+/x [
+  0
+  dup pmw add pw add
+  dup pmw add pw add
+] def
+/y [
+  pmh ph add 0 mul ph add
+  dup
+  dup
+] def
+/scx sw 2 div def
+/scy sh 2 div def
+/snx urx def
+/sny lly 2 add def
+/dx llx def
+/dy sny def
+/fnx scx def
+/fny dy def
+/lx snx def
+/ly ury fnfs 0.8 mul sub def
+/sx 0 def
+/tab 8 def
+/x0 0 def
+/y0 0 def
+%%EndSetup
+
+%%Page: (1-3) 1
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 0 add translate
+/v 0 store
+/x0 x v get 4.890219 add sx cw mul add store
+/y0 y v get bfs  sub store
+x0 y0 moveto
+() p n
+() N
+(By Date: - Read through:) N
+() N
+(January  1 - Genesis 3) N
+(January  2 - Genesis 7) N
+(January  3 - Genesis 11) N
+(January  4 - Genesis 15) N
+(January  5 - Genesis 18) N
+(January  6 - Genesis 20) N
+(January  7 - Genesis 23) N
+(January  8 - Genesis 25) N
+(January  9 - Genesis 27) N
+(January 10 - Genesis 30) N
+(January 11 - Genesis 32) N
+(January 12 - Genesis 35) N
+(January 13 - Genesis 37) N
+(January 14 - Genesis 40) N
+(January 15 - Genesis 42) N
+(January 16 - Genesis 45) N
+(January 17 - Genesis 48) N
+(January 18 - Exodus 1) N
+(January 19 - Exodus 4) N
+(January 20 - Exodus 7) N
+(January 21 - Exodus 9) N
+(January 22 - Exodus 12) N
+(January 23 - Exodus 15) N
+(January 24 - Exodus 18) N
+(January 25 - Exodus 21) N
+(January 26 - Exodus 24) N
+(January 27 - Exodus 27) N
+(January 28 - Exodus 29) N
+(January 29 - Exodus 32) N
+(January 30 - Exodus 35) N
+(January 31 - Exodus 38) N
+() N
+(Read the Bible in a Year!) N
+() N
+border
+/v 1 store
+/x0 x v get 4.890219 add sx cw mul add store
+/y0 y v get bfs  sub store
+x0 y0 moveto
+() p n
+() N
+(By Date: - Read through:) N
+() N
+(February  1 - Leviticus 1) N
+(February  2 - Leviticus 4) N
+(February  3 - Leviticus 6) N
+(February  4 - Leviticus 8) N
+(February  5 - Leviticus 11) N
+(February  6 - Leviticus 13) N
+(February  7 - Leviticus 15) N
+(February  8 - Leviticus 18) N
+(February  9 - Leviticus 21) N
+(February 10 - Leviticus 23) N
+(February 11 - Leviticus 25) N
+(February 12 - Leviticus 27) N
+(February 13 - Numbers 2) N
+(February 14 - Numbers 4) N
+(February 15 - Numbers 6) N
+(February 16 - Numbers 7) N
+(February 17 - Numbers 10) N
+(February 18 - Numbers 13) N
+(February 19 - Numbers 15) N
+(February 20 - Numbers 17) N
+(February 21 - Numbers 19) N
+(February 22 - Numbers 21) N
+(February 23 - Numbers 24) N
+(February 24 - Numbers 26) N
+(February 25 - Numbers 29) N
+(February 26 - Numbers 31) N
+(February 27 - Numbers 33) N
+(February 28 - Numbers 36) N
+() N
+(Read the Bible in a Year!) N
+() N
+border
+/v 2 store
+/x0 x v get 4.890219 add sx cw mul add store
+/y0 y v get bfs  sub store
+x0 y0 moveto
+() p n
+() N
+(By Date: - Read through:) N
+() N
+(March  1 - Deuteronomy 2) N
+(March  2 - Deuteronomy 4) N
+(March  3 - Deuteronomy 7) N
+(March  4 - Deuteronomy 10) N
+(March  5 - Deuteronomy 13) N
+(March  6 - Deuteronomy 16) N
+(March  7 - Deuteronomy 20) N
+(March  8 - Deuteronomy 23) N
+(March  9 - Deuteronomy 27) N
+(March 10 - Deuteronomy 28) N
+(March 11 - Deuteronomy 31) N
+(March 12 - Deuteronomy 33) N
+(March 13 - Joshua 3) N
+(March 14 - Joshua 6) N
+(March 15 - Joshua 8) N
+(March 16 - Joshua 10) N
+(March 17 - Joshua 13) N
+(March 18 - Joshua 16) N
+(March 19 - Joshua 19) N
+(March 20 - Joshua 22) N
+(March 21 - Judges 1) N
+(March 22 - Judges 4) N
+(March 23 - Judges 6) N
+(March 24 - Judges 8) N
+(March 25 - Judges 10) N
+(March 26 - Judges 13) N
+(March 27 - Judges 16) N
+(March 28 - Judges 19) N
+(March 29 - Judges 21) N
+(March 30 - Ruth 3) N
+(March 31 - I Samuel 2) N
+() N
+(Read the Bible in a Year!) N
+() N
+border
+grestore
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (4-6) 2
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 0 add translate
+/v 0 store
+/x0 x v get 4.890219 add sx cw mul add store
+/y0 y v get bfs  sub store
+x0 y0 moveto
+() p n
+() N
+(By Date: - Read through:) N
+() N
+(April  1 - I Samuel 6) N
+(April  2 - I Samuel 9) N
+(April  3 - I Samuel 12) N
+(April  4 - I Samuel 14) N
+(April  5 - I Samuel 16) N
+(April  6 - I Samuel 18) N
+(April  7 - I Samuel 20) N
+(April  8 - I Samuel 23) N
+(April  9 - I Samuel 25) N
+(April 10 - I Samuel 28) N
+(April 11 - II Samuel 1) N
+(April 12 - II Samuel 3) N
+(April 13 - II Samuel 6) N
+(April 14 - II Samuel 10) N
+(April 15 - II Samuel 12) N
+(April 16 - II Samuel 14) N
+(April 17 - II Samuel 16) N
+(April 18 - II Samuel 18) N
+(April 19 - II Samuel 20) N
+(April 20 - II Samuel 23) N
+(April 21 - I Kings 1) N
+(April 22 - I Kings 2) N
+(April 23 - I Kings 5) N
+(April 24 - I Kings 7) N
+(April 25 - I Kings 8) N
+(April 26 - I Kings 10) N
+(April 27 - I Kings 12) N
+(April 28 - I Kings 14) N
+(April 29 - I Kings 16) N
+(April 30 - I Kings 18) N
+() N
+(Read the Bible in a Year!) N
+() N
+border
+/v 1 store
+/x0 x v get 4.890219 add sx cw mul add store
+/y0 y v get bfs  sub store
+x0 y0 moveto
+() p n
+() N
+(By Date: - Read through:) N
+() N
+(May  1 - I Kings 20) N
+(May  2 - I Kings 22) N
+(May  3 - II Kings 3) N
+(May  4 - II Kings 5) N
+(May  5 - II Kings 7) N
+(May  6 - II Kings 9) N
+(May  7 - II Kings 11) N
+(May  8 - II Kings 14) N
+(May  9 - II Kings 16) N
+(May 10 - II Kings 18) N
+(May 11 - II Kings 21) N
+(May 12 - II Kings 23) N
+(May 13 - I Chronicles 1) N
+(May 14 - I Chronicles 4) N
+(May 15 - I Chronicles 6) N
+(May 16 - I Chronicles 8) N
+(May 17 - I Chronicles 11) N
+(May 18 - I Chronicles 14) N
+(May 19 - I Chronicles 17) N
+(May 20 - I Chronicles 21) N
+(May 21 - I Chronicles 24) N
+(May 22 - I Chronicles 27) N
+(May 23 - II Chronicles 1) N
+(May 24 - II Chronicles 5) N
+(May 25 - II Chronicles 7) N
+(May 26 - II Chronicles 10) N
+(May 27 - II Chronicles 14) N
+(May 28 - II Chronicles 18) N
+(May 29 - II Chronicles 21) N
+(May 30 - II Chronicles 24) N
+(May 31 - II Chronicles 27) N
+() N
+(Read the Bible in a Year!) N
+() N
+border
+/v 2 store
+/x0 x v get 4.890219 add sx cw mul add store
+/y0 y v get bfs  sub store
+x0 y0 moveto
+() p n
+() N
+(By Date: - Read through:) N
+() N
+(June  1 - II Chronicles 29) N
+(June  2 - II Chronicles 31) N
+(June  3 - II Chronicles 33) N
+(June  4 - II Chronicles 35) N
+(June  5 - Ezra 2) N
+(June  6 - Ezra 5) N
+(June  7 - Ezra 8) N
+(June  8 - Nehemiah 1) N
+(June  9 - Nehemiah 4) N
+(June 10 - Nehemiah 7) N
+(June 11 - Nehemiah 9) N
+(June 12 - Nehemiah 11) N
+(June 13 - Nehemiah 13) N
+(June 14 - Esther 3) N
+(June 15 - Esther 8) N
+(June 16 - Job 2) N
+(June 17 - Job 7) N
+(June 18 - Job 12) N
+(June 19 - Job 17) N
+(June 20 - Job 22) N
+(June 21 - Job 29) N
+(June 22 - Job 33) N
+(June 23 - Job 38) N
+(June 24 - Psalms 2) N
+(June 25 - Psalms 10) N
+(June 26 - Psalms 18) N
+(June 27 - Psalms 26) N
+(June 28 - Psalms 33) N
+(June 29 - Psalms 38) N
+(June 30 - Psalms 45) N
+() N
+(Read the Bible in a Year!) N
+() N
+border
+grestore
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (7-9) 3
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 0 add translate
+/v 0 store
+/x0 x v get 4.890219 add sx cw mul add store
+/y0 y v get bfs  sub store
+x0 y0 moveto
+() p n
+() N
+(By Date: - Read through:) N
+() N
+(July  1 - Psalms 53) N
+(July  2 - Psalms 61) N
+(July  3 - Psalms 68) N
+(July  4 - Psalms 73) N
+(July  5 - Psalms 78) N
+(July  6 - Psalms 86) N
+(July  7 - Psalms 91) N
+(July  8 - Psalms 101) N
+(July  9 - Psalms 105) N
+(July 10 - Psalms 109) N
+(July 11 - Psalms 118) N
+(July 12 - Psalms 119) N
+(July 13 - Psalms 135) N
+(July 14 - Psalms 144) N
+(July 15 - Proverbs 2) N
+(July 16 - Proverbs 7) N
+(July 17 - Proverbs 11) N
+(July 18 - Proverbs 15) N
+(July 19 - Proverbs 19) N
+(July 20 - Proverbs 23) N
+(July 21 - Proverbs 27) N
+(July 22 - Proverbs 31) N
+(July 23 - Ecclesiastes 4) N
+(July 24 - Ecclesiastes 9) N
+(July 25 - Song of Solomon 4) N
+(July 26 - Isaiah 1) N
+(July 27 - Isaiah 5) N
+(July 28 - Isaiah 9) N
+(July 29 - Isaiah 13) N
+(July 30 - Isaiah 18) N
+(July 31 - Isaiah 22) N
+() N
+(Read the Bible in a Year!) N
+() N
+border
+/v 1 store
+/x0 x v get 4.890219 add sx cw mul add store
+/y0 y v get bfs  sub store
+x0 y0 moveto
+() p n
+() N
+(By Date: - Read through:) N
+() N
+(August  1 - Isaiah 27) N
+(August  2 - Isaiah 30) N
+(August  3 - Isaiah 35) N
+(August  4 - Isaiah 38) N
+(August  5 - Isaiah 41) N
+(August  6 - Isaiah 44) N
+(August  7 - Isaiah 48) N
+(August  8 - Isaiah 52) N
+(August  9 - Isaiah 57) N
+(August 10 - Isaiah 61) N
+(August 11 - Isaiah 65) N
+(August 12 - Jeremiah 2) N
+(August 13 - Jeremiah 5) N
+(August 14 - Jeremiah 8) N
+(August 15 - Jeremiah 11) N
+(August 16 - Jeremiah 14) N
+(August 17 - Jeremiah 17) N
+(August 18 - Jeremiah 21) N
+(August 19 - Jeremiah 23) N
+(August 20 - Jeremiah 26) N
+(August 21 - Jeremiah 29) N
+(August 22 - Jeremiah 31) N
+(August 23 - Jeremiah 33) N
+(August 24 - Jeremiah 36) N
+(August 25 - Jeremiah 39) N
+(August 26 - Jeremiah 42) N
+(August 27 - Jeremiah 45) N
+(August 28 - Jeremiah 48) N
+(August 29 - Jeremiah 50) N
+(August 30 - Jeremiah 51) N
+(August 31 - Lamentations 1) N
+() N
+(Read the Bible in a Year!) N
+() N
+border
+/v 2 store
+/x0 x v get 4.890219 add sx cw mul add store
+/y0 y v get bfs  sub store
+x0 y0 moveto
+() p n
+() N
+(By Date: - Read through:) N
+() N
+(September  1 - Lamentations 4) N
+(September  2 - Ezekiel 3) N
+(September  3 - Ezekiel 7) N
+(September  4 - Ezekiel 11) N
+(September  5 - Ezekiel 14) N
+(September  6 - Ezekiel 16) N
+(September  7 - Ezekiel 19) N
+(September  8 - Ezekiel 21) N
+(September  9 - Ezekiel 23) N
+(September 10 - Ezekiel 26) N
+(September 11 - Ezekiel 28) N
+(September 12 - Ezekiel 31) N
+(September 13 - Ezekiel 33) N
+(September 14 - Ezekiel 36) N
+(September 15 - Ezekiel 39) N
+(September 16 - Ezekiel 41) N
+(September 17 - Ezekiel 44) N
+(September 18 - Ezekiel 46) N
+(September 19 - Daniel 1) N
+(September 20 - Daniel 3) N
+(September 21 - Daniel 5) N
+(September 22 - Daniel 7) N
+(September 23 - Daniel 9) N
+(September 24 - Daniel 11) N
+(September 25 - Hosea 4) N
+(September 26 - Hosea 9) N
+(September 27 - Joel 1) N
+(September 28 - Amos 2) N
+(September 29 - Amos 7) N
+(September 30 - Jonah 1) N
+() N
+(Read the Bible in a Year!) N
+() N
+border
+grestore
+end % of iso1dict
+pagesave restore
+showpage
+%%Page: (10-12) 4
+%%BeginPageSetup
+/pagesave save def
+sh 0 translate 90 rotate
+%%EndPageSetup
+iso1dict begin
+gsave
+llx lly 0 add translate
+/v 0 store
+/x0 x v get 4.890219 add sx cw mul add store
+/y0 y v get bfs  sub store
+x0 y0 moveto
+() p n
+() N
+(By Date: - Read through:) N
+() N
+(October  1 - Micah 3) N
+(October  2 - Nahum 1) N
+(October  3 - Habakkuk 2) N
+(October  4 - Zephaniah 3) N
+(October  5 - Zechariah 3) N
+(October  6 - Zechariah 8) N
+(October  7 - Zechariah 13) N
+(October  8 - Malachi 3) N
+(October  9 - Matthew 4) N
+(October 10 - Matthew 7) N
+(October 11 - Matthew 10) N
+(October 12 - Matthew 12) N
+(October 13 - Matthew 14) N
+(October 14 - Matthew 17) N
+(October 15 - Matthew 20) N
+(October 16 - Matthew 22) N
+(October 17 - Matthew 24) N
+(October 18 - Matthew 26) N
+(October 19 - Matthew 28) N
+(October 20 - Mark 3) N
+(October 21 - Mark 5) N
+(October 22 - Mark 7) N
+(October 23 - Mark 9) N
+(October 24 - Mark 11) N
+(October 25 - Mark 13) N
+(October 26 - Mark 15) N
+(October 27 - Luke 1) N
+(October 28 - Luke 3) N
+(October 29 - Luke 5) N
+(October 30 - Luke 7) N
+(October 31 - Luke 9) N
+() N
+(Read the Bible in a Year!) N
+() N
+border
+/v 1 store
+/x0 x v get 4.890219 add sx cw mul add store
+/y0 y v get bfs  sub store
+x0 y0 moveto
+() p n
+() N
+(By Date: - Read through:) N
+() N
+(November  1 - Luke 11) N
+(November  2 - Luke 13) N
+(November  3 - Luke 16) N
+(November  4 - Luke 18) N
+(November  5 - Luke 20) N
+(November  6 - Luke 22) N
+(November  7 - Luke 24) N
+(November  8 - John 3) N
+(November  9 - John 5) N
+(November 10 - John 7) N
+(November 11 - John 9) N
+(November 12 - John 11) N
+(November 13 - John 13) N
+(November 14 - John 16) N
+(November 15 - John 19) N
+(November 16 - Acts 1) N
+(November 17 - Acts 3) N
+(November 18 - Acts 6) N
+(November 19 - Acts 8) N
+(November 20 - Acts 10) N
+(November 21 - Acts 13) N
+(November 22 - Acts 16) N
+(November 23 - Acts 19) N
+(November 24 - Acts 21) N
+(November 25 - Acts 24) N
+(November 26 - Acts 27) N
+(November 27 - Romans 2) N
+(November 28 - Romans 6) N
+(November 29 - Romans 9) N
+(November 30 - Romans 13) N
+() N
+(Read the Bible in a Year!) N
+() N
+border
+/v 2 store
+/x0 x v get 4.890219 add sx cw mul add store
+/y0 y v get bfs  sub store
+x0 y0 moveto
+() p n
+() N
+(By Date: - Read through:) N
+() N
+(December  1 - Romans 16) N
+(December  2 - I Corinthians 4) N
+(December  3 - I Corinthians 8) N
+(December  4 - I Corinthians 11) N
+(December  5 - I Corinthians 14) N
+(December  6 - II Corinthians 1) N
+(December  7 - II Corinthians 6) N
+(December  8 - II Corinthians 10) N
+(December  9 - Galatians 1) N
+(December 10 - Galatians 4) N
+(December 11 - Ephesians 3) N
+(December 12 - Philippians 1) N
+(December 13 - Colossians 1) N
+(December 14 - I Thessalonians 2) N
+(December 15 - II Thessalonians 3) N
+(December 16 - I Timothy 5) N
+(December 17 - II Timothy 4) N
+(December 18 - Hebrews 2) N
+(December 19 - Hebrews 7) N
+(December 20 - Hebrews 10) N
+(December 21 - Hebrews 13) N
+(December 22 - James 5) N
+(December 23 - I Peter 4) N
+(December 24 - I John 1) N
+(December 25 - I John 5) N
+(December 26 - Revelation 1) N
+(December 27 - Revelation 5) N
+(December 28 - Revelation 10) N
+(December 29 - Revelation 14) N
+(December 30 - Revelation 18) N
+(December 31 - Revelation 22) N
+() N
+(Read the Bible in a Year!) N
+() N
+border
+grestore
+end % of iso1dict
+pagesave restore
+showpage
+
+%%Trailer
+end
+%%EOF

@@ -1,0 +1,76 @@
+	ASCII TAB and Left Margin Alignment Options
+
+Is your text misaligned?  Do you want different verse references or
+left margin?  This file is for you, offering alternate left margins.
+
+
+	Background / History / Problem Statement
+
+The lyric files include a full verse reference in the left margin in
+the form of book abbreviation:chapter:verse.  To accommodate this, the
+margin is 15 columns wide with the text starting in column 16.  ASCII
+tabs are used to align the text at column 16.
+
+When ASCII code 9 = Ctrl+I = Tab was invented in the 1960s, it always
+moved to the next multiple of 8 column as that matched all terminals
+and printers of the time.  Software also worked for years on this 8
+column tab standard.  These lyric files assume this consistent
+historic behavior for correct text alignment.
+
+Unfortunately, some modern fonts and software no longer render tab in
+a consistent way.  Mono-spaced fonts tend to still get tab right since
+all characters are the same width.  Proportional fonts can look better
+for reading, but tab location can be unpredictable.  To support the
+historical standard, tab must move to the position past 8 of the
+widest characters of the font.  Sadly, many move too close resulting
+in misalignment of the first line of the verse for shorter prefixes.
+
+Couldn't we just use space in the left margin?  No.  First this makes
+the files 21% larger.  Worse is that if your font or software doesn't
+align by tabs correctly, then space alignment is even worse.  Tab and
+space size are up to the font designer.  For aligning we would need to
+know how many spaces to insert and this depends on the width of the
+characters before the spaces, which is variable and unknown.
+
+So what to do then?  We could use a mono-space font to render the
+lyrics.  We could just live with the first line of the verse being
+misaligned.  We could eliminate or shorten the verse references to let
+tab alignment work better.
+
+
+	Alternate Left Margin / Simpler Verse Reference Options
+
+Here are some simple perl commands to edit the original files.  You
+can run the command on a copy of one file and if you like the result,
+use *.lrc to edit all files.  Restore the original files to start over
+with a different command.  Replace -i with -i.bak if you need backups.
+
+
+# drop book/chapter to keep verse number only and one tab
+perl -i -pe 's/\]\S+ \d+.(\d+).\s+/]$1\t/; s/\t\t/\t/;' *.lrc
+
+# keep verse number only and two tabs for original wide margin
+perl -i -pe 's/\]\S+ \d+.(\d+).\s+/]\t$1\t/;' *.lrc
+
+# push verse number right into the first line, like most bibles
+perl -i -pe 's/\]\S+ \d+.(\d+).\s+/]\t\t$1 /;' *.lrc
+
+# no verse prefix at all, with one tab margin
+perl -i -pe 's/\]\S+ \d+.\d+.\s+/]\t/; s/\t\t/\t/;' *.lrc
+
+# no verse reference and no left margin at all
+perl -i -pe 's/\]\S+ \d+.\d+.\s+/]/; s/\t\t//;' *.lrc
+
+# remove the yearly reading schedule from the headers
+perl -i -pe 's/\}\s+\*\*.*\*\*/\}/;' *.lrc
+
+
+	How to get full chapter/verse aligned with a proportional font
+
+Finally, if we are really ambitious, we can study the font we use and
+insert extra tabs only where needed to produce consistent alignment of
+all lines, even with a wider reference in a proportional font.  This
+is what I did with MythMusic of MythTV.  This may give clues on how to
+accomplish this for your software and font.
+
+For this more involved option, see ./MythMusic/README

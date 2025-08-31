@@ -96,13 +96,13 @@ view of this reading schedule.  See bookmarks.ps for this schedule in
 bookmark format suitable for printing (try "make print").
 
 
-# Optional Reformating of the Left Margin or Verse References
+# Optional Reformatting of the Left Margin or Verse References
 
 The left margin includes a full book, chapter, verse reference
-followed by one ASII tab character before the text.  The continued
+followed by one ASCII tab character before the text.  The continued
 lines of the verse are prefixed with two tabs.  If your text alignment
-is wrong or you prefer shorter verse references or different left
-margin, please see ./README-TABS for alternate left margin options.
+is wrong or you prefer shorter verse references or a different left
+margin, please see ./README-OPTIONS.
 
 
 # Optional Text to Audio Synchronization Points
