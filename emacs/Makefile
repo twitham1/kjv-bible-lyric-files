@@ -17,8 +17,11 @@ dist:
 	KJV/README-OPTIONS \
 	KJV/COPYING \
 	KJV/Makefile \
-	KJV/*.txt \
-	KJV/*.png \
+	KJV/kjv.txt \
+	KJV/kjv-syb.txt \
+	KJV/yearplan.png \
+	KJV/yearplan.txt \
+	KJV/bookmarks.txt \
 	KJV/bookmarks.ps \
 	KJV/site-lisp \
 	KJV/bin \

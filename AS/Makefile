@@ -34,18 +34,20 @@ dist: lrc.log
 	KJV/README-OPTIONS \
 	KJV/COPYING \
 	KJV/Makefile \
-	KJV/*.txt \
-	KJV/*.png \
+	KJV/kjv.txt \
+	KJV/kjv-syb.txt \
+	KJV/yearplan.png \
+	KJV/yearplan.txt \
+	KJV/bookmarks.txt \
 	KJV/bookmarks.ps \
-	KJV/site-lisp \
 	KJV/bin \
 	KJV/MythMusic \
 	KJV/test.lrc \
 	KJV/${WHO}/README \
 	KJV/${WHO}/Makefile \
 	KJV/${WHO}/.kjvmp3.pl \
-	KJV/${WHO}/*.txt \
-	KJV/${WHO}/*.log \
+	KJV/${WHO}/kjv-mp3-map.txt \
+	KJV/${WHO}/lrc.log \
 	KJV/${WHO}/*.lrc
 
 clean:
