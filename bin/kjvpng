@@ -307,7 +307,8 @@ sub best {			# best plan found so far
     my($self) = @_;
     my $day = my $i = 0;
     my $loaded = '';
-    for my $file (glob(".kjv-$self->{days}*.txt"), 'yearplan.tmp') {
+    for my $file (glob(".kjv-$self->{days}*.txt"),
+		  'yearplan.txt', 'yearplan.tmp') {
 	if (open FILE, $file) {
 	    warn "loaded $file\n";
 	    while (<FILE>) {
