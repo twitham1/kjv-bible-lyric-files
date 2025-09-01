@@ -36,6 +36,7 @@ Simply copy the DIR/*.lrc files to the location of matching *.mp3
 files.  Or, copy those matching *.mp3 to the given DIR here.  AS/OF
 the given dates, these options worked for me, YMMV.
 
+<pre>
 DIR:	AS/
 ARTIST:	Alexander Scourby
 YEAR:	1953
@@ -63,7 +64,7 @@ YEAR:	2005
 SOURCE:	./site-lisp/kjv-mode.el ./bin/kjvmp3
 AS/OF:	2005
 NOTE:	No .lrc at all but rather a scripture reading mode for Emacs
-
+</pre>
 
 # EMACS
 
