@@ -27,14 +27,14 @@ displaying 11 or more lines of context is recommended.
 * one syllable for pause punctuation: , ; :
 * one syllable for blank line paragraph separator
 
-This yields a better timing than bytes, words or lines.
+Syllables yield a better timing than bytes, words or lines.
 
 
 # INSTALLATION
 
 Simply copy the DIR/*.lrc files to the location of matching *.mp3
 files.  Or, copy those matching *.mp3 to the given DIR here.  AS/OF
-the given dates, these options worked for me, YMMV.
+the given dates, these options worked for me, YMMV:
 
 <pre>
 DIR:	AS/
@@ -78,23 +78,30 @@ Bible in emacs.  See C-h m for mode documentation.
 
 Symlink the directory of your *.mp3 to ~/.kjv, something like:
 
-	ln -s /usr/local/share/doc/KJV/AS ~/.kjv
+	ln -s /usr/local/share/audio/KJV/AS ~/.kjv
 
 then copy bin/kjvmp3 to your $PATH for audio playback in emacs.  This
 feature requires mplayer to also be installed on $PATH.
 
 
-# Optional Yearly Reading Schedule
+# Optional Daily Reading Schedule
 
-The header line of each .lrc file shows a date.  If all chapters are
-read on these dates, this will read the whole bible from cover to
-cover in a year.  Of course this date can simply be ignored when not
-reading by this plan.
+The title line of each .lrc file includes a date and the number of
+chapters to read that day.  If all chapters are read on these dates,
+this will read the whole bible from cover to cover in a calendar year.
+Of course this can simply be ignored when not reading by this plan.
 
-If used, this schedule aims for minimum range and standard deviation
-of the reading syllables per day.  See yearplan.png for a graphical
-view of this reading schedule.  See bookmarks.ps for this schedule in
-bookmark format suitable for printing (try "make print").
+Alternately, you could ignore the date but still use the chapters per
+day.  Starting on any date, reading a day of chapters each day will
+read the bible in a year.  Reading two days of chapters each day would
+read the bible in 6 months, or three days of chapters per day would
+read the bible in only 4 months.
+
+The goal of this schedule is similar reading time per day.  This was
+done by finding the minimum range and standard deviation of reading
+syllables per day.  See yearplan.png for a graphical view of this
+reading schedule.  See bookmarks.ps for this schedule in bookmark
+format suitable for printing (try "make print").
 
 
 # Optional Reformatting of the Left Margin or Verse References
@@ -129,7 +136,7 @@ points.  See ./AS/.kjvmp3.pl for how sync points are recorded.
 
 How do you keep track of 1189 chapters in your audio player?  DW and
 SJ used filenames that sort in order via chapter number prefixes, so
-that might be sufficient.  My copy of AS however did not do this so an
+that could be sufficient.  My copy of AS however did not do this so an
 alphabetical sort of the files is not in biblical order.
 
 What I do in either case is use a tool like puddletag (or mp3tag) to
