@@ -222,7 +222,7 @@ sub readsyncs {			# read optional text/audio sync points
 	    m/(\d+)[.:](\d+)\s+(\d+)[.:](\d+)/
 		and $syncs->{"$book $1"}{$2}{sec} = $3 * 60 + $4 + 0.5
 		and $4 > 59
-		and warn "\t$4 minutes? $_";
+		and warn "\t$4 seconds in $conf->{syncfile}?!: $_";
 	}
 	close $fh or die $!;
     }
